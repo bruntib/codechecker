@@ -28,10 +28,10 @@ from sqlalchemy.sql.expression import or_, and_, not_, func, \
 import codechecker_api_shared
 from codechecker_api.codeCheckerDBAccess_v6 import constants, ttypes
 from codechecker_api.codeCheckerDBAccess_v6.ttypes import BugPathPos, \
-    CheckerCount, CommentData, DiffType, Encoding, RunHistoryData, Order, \
+    CheckerCount, CommentData, DiffType, Encoding, Guideline, Order, \
     ReportData, ReportDetails, ReviewData, RunData, RunFilter, \
-    RunReportCount, RunSortType, RunTagCount, SourceComponentData, \
-    SourceFileData, SortMode, SortType
+    RunHistoryData, RunReportCount, RunSortType, RunTagCount, \
+    SourceComponentData, SourceFileData, SortMode, SortType
 
 from codechecker_common import plist_parser, skiplist_handler
 from codechecker_common.source_code_comment_handler import \
@@ -235,6 +235,12 @@ def process_report_filter(session, run_ids, report_filter, cmp_data=None):
         OR = [Report.checker_id.ilike(conv(cn))
               for cn in report_filter.checkerName]
         AND.append(or_(*OR))
+
+    if report_filter.guidelines:
+        checker_names = set()
+        for rule in guidelines:
+            checker_names.update(self.__context.guideline_map.by_rule(rule))
+        AND.append(Report.checker_id.in_(checker_names))
 
     if report_filter.analyzerNames:
         OR = [Report.analyzer_name.ilike(conv(an))
@@ -868,6 +874,14 @@ class ThriftRequestHandler(object):
             'productID': product.id
         }
 
+    def __get_guideline_rules(self, checker):
+        """
+        This function returns a list of ttypes.Guideline objects which describe
+        the guideline rules that are covered by the given checker.
+        """
+        return [Guideline(name=gl, rules=r) for gl, r in
+                self.__context.guideline_map.get(checker, {}).items()]
+
     def __get_username(self):
         """
         Returns the actually logged in user name.
@@ -1146,6 +1160,7 @@ class ThriftRequestHandler(object):
                 column=report.column,
                 checkerId=report.checker_id,
                 severity=report.severity,
+                guidelines=self.__get_guideline_rules(report.checker_id),
                 reviewData=create_review_data(review_status),
                 detectionStatus=detection_status_enum(report.detection_status),
                 detectedAt=str(report.detected_at),
@@ -1315,6 +1330,8 @@ class ThriftRequestHandler(object):
                                    checkerMsg=checker_msg,
                                    checkerId=checker,
                                    severity=severity,
+                                   guidelines
+                                   =self.__get_guideline_rules(checker),
                                    reviewData=review_data,
                                    detectedAt=str(detected_at),
                                    fixedAt=str(fixed_at),
@@ -1368,6 +1385,8 @@ class ThriftRequestHandler(object):
                                    column=column,
                                    checkerId=checker,
                                    severity=severity,
+                                   guidelines
+                                   =self.__get_guideline_rules(checker),
                                    reviewData=review_data,
                                    detectionStatus=detection_status_enum(
                                        d_status),
@@ -1882,6 +1901,44 @@ class ThriftRequestHandler(object):
                                              count=count)
                 results.append(checker_count)
         return results
+
+    @exc_to_thrift_reqfail
+    @timeit
+    def getGuidelineCounts(self, run_ids, report_filter, cmp_data, limit,
+                           offset):
+        self.__require_access()
+
+        limit = verify_limit_range(limit)
+
+        results = []
+        guideline_counts = defaultdict(int)
+
+        with DBSession(self.__Session) as session:
+            filter_expression = process_report_filter(session, run_ids,
+                                                      report_filter, cmp_data)
+
+            is_unique = report_filter is not None and report_filter.isUnique
+
+            if is_unique:
+                q = session.query(func.max(Report.checker_id).label(
+                                      'checker_id'),
+                                  Report.bug_id)
+            else:
+                q = session.query(Report.check_id,
+                                  func.count(Report.id))
+
+            q = apply_report_filter(q, filter_expression)
+
+            if is_unique:
+                q = q.group_by(Report.bug_id).subquery()
+                unique_checker_q = session.query(q.c.checker_id,
+                                                 func.count(q.c.bug_id)) \
+                    .group_by(q.c.checker_id)
+            else:
+                unique_checker_q = q.group_by(Report.checker_id)
+
+            for checker, count in unique_checker_q:
+                guideline_counts[] += count
 
     @exc_to_thrift_reqfail
     @timeit

@@ -153,6 +153,15 @@ struct ReportDetails {
   3: optional ExtendedReportDataList extendedData,
 }
 
+// The "name" component of this struct is optional, because we use this for
+// filtering as well. In this case it is possible to filter only for a set of
+// rules and not the whole guideline.
+struct Guideline {
+  1: optional string name,
+  2: list<string> rules
+}
+typedef list<Guideline> GuidelineList
+
 typedef string AnalyzerType
 
 struct AnalyzerStatistics {
@@ -243,6 +252,7 @@ struct ReportData {
   15: i64             bugPathLength,   // Length of the bug path.
   16: optional ReportDetails details,  // Details of the report.
   17: optional string analyzerName,    // Analyzer name.
+  18: optional GuidelineList guidelines, // Guideline info which the checker belongs to.
 }
 typedef list<ReportData> ReportDataList
 
@@ -262,8 +272,8 @@ struct ReportDate {
 }
 
 /**
- * Members of this struct are interpreted in "OR" relation with each other.
- * Between the elements of the list there is "AND" relation.
+ * Members of this struct are interpreted in "AND" relation with each other.
+ * Between the elements of the list there is "OR" relation.
  */
 struct ReportFilter {
   1: list<string>          filepath,
@@ -284,6 +294,7 @@ struct ReportFilter {
   16: optional ReportDate         date,          // Dates of the report.
   17: optional list<string>       analyzerNames, // Names of the code analyzers.
   18: optional i64                openReportsDate, // Open reports date in unix time format.
+  19: optional GuidelineList      guidelines     // If guideline name is given then the whole guideline is selected, otherwise only the selected rules.
 }
 
 struct RunReportCount {
@@ -299,6 +310,12 @@ struct CheckerCount {
   3: i64         count     // Number of reports.
 }
 typedef list<CheckerCount> CheckerCounts
+
+struct GuidelineCount {
+  1: string rule,
+  2: i64    count
+}
+typedef list<GuidelineCount> GuidelineCounts
 
 struct CommentData {
   1: i64     id,

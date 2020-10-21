@@ -14,38 +14,11 @@ from collections.abc import Mapping
 import os
 import sys
 
+from codechecker_common import config_maps
 from codechecker_common import logger
 from codechecker_common.util import load_json_or_empty
 
 LOG = logger.get_logger('system')
-
-
-class SeverityMap(Mapping):
-    """
-    A dictionary which maps checker names to severity levels.
-    If a key is not found in the map then it will return MEDIUM severity in
-    case of compiler warnings and CRITICAL in case of compiler errors.
-    """
-
-    def __init__(self, *args, **kwargs):
-        self.store = dict(*args, **kwargs)
-
-    def __getitem__(self, key):
-        # Key is not specified in the store and it is a compiler warning
-        # or error.
-        if key not in self.store:
-            if key == 'clang-diagnostic-error':
-                return "CRITICAL"
-            elif key.startswith('clang-diagnostic-'):
-                return "MEDIUM"
-
-        return self.store[key] if key in self.store else 'UNSPECIFIED'
-
-    def __iter__(self):
-        return iter(self.store)
-
-    def __len__(self):
-        return len(self.store)
 
 
 # -----------------------------------------------------------------------------
@@ -57,8 +30,10 @@ class Context(object):
         self.pckg_layout = pckg_layout
 
         self._package_root = package_root
-        self._severity_map = SeverityMap(
+        self._severity_map = config_maps.SeverityMap(
             load_json_or_empty(self.checkers_severity_map_file, {}))
+        self._guideline_map = config_maps.GuidelineMap(
+            self.checkers_guideline_map_file)
         self.__system_comment_map = \
             load_json_or_empty(self.system_comment_map_file, {})
         self.__package_version = None
@@ -165,6 +140,21 @@ class Context(object):
                             'checker_severity_map.json')
 
     @property
+    def checkers_guideline_map_file(self):
+        # Get guideline map file from the environment.
+        if 'CC_GUIDELINE_MAP_FILE' in os.environ:
+            guideline_map_file = os.environ.get('CC_GUIDELINE_MAP_FILE')
+
+            LOG.warning("Guideline map file set through the "
+                        "'CC_GUIDELINE_MAP_FILE' environment variable: %s",
+                        guideline_map_file)
+
+            return severity_map_file
+
+        return os.path.join(self._package_root, 'config',
+                            'checker_guideline_map.json')
+
+    @property
     def doc_root(self):
         return os.path.join(self._package_root, 'www', 'docs')
 
@@ -185,6 +175,10 @@ class Context(object):
     @property
     def severity_map(self):
         return self._severity_map
+
+    @property
+    def guideline_map(self):
+        return self._guideline_map
 
 
 def get_context():

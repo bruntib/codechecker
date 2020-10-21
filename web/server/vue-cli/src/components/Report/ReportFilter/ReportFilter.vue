@@ -143,6 +143,18 @@
 
       <v-list-item class="pl-1">
         <v-list-item-content class="pa-0">
+          <guideline-filter
+            ref="filters"
+            :namespace="namespace"
+            @update:url="updateUrl"
+          />
+        </v-list-item-content>
+      </v-list-item>
+
+      <v-divider />
+
+      <v-list-item class="pl-1">
+        <v-list-item-content class="pa-0">
           <severity-filter
             ref="filters"
             :namespace="namespace"
@@ -299,6 +311,7 @@ import {
   BugPathLengthFilter,
   CheckerMessageFilter,
   CheckerNameFilter,
+  GuidelineFilter,
   ComparedToDiffTypeFilter,
   ComparedToOpenReportsDateFilter,
   ComparedToRunFilter,
@@ -338,6 +351,7 @@ export default {
     FixDateFilter,
     SourceComponentFilter,
     CheckerNameFilter,
+    GuidelineFilter,
     CheckerMessageFilter,
     RemoveFilteredReports,
     BugPathLengthFilter

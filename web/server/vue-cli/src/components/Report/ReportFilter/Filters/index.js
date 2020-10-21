@@ -15,6 +15,7 @@ import DetectionDateFilter from "./DetectionDateFilter";
 import FilePathFilter from "./FilePathFilter";
 import SourceComponentFilter from "./SourceComponentFilter";
 import CheckerNameFilter from "./CheckerNameFilter";
+import GuidelineFilter from "./GuidelineFilter";
 import CheckerMessageFilter from "./CheckerMessageFilter";
 import BaseFilterMixin from "./BaseFilter.mixin";
 import BugPathLengthFilter from "./BugPathLengthFilter";
@@ -36,6 +37,7 @@ export {
   FilePathFilter,
   SourceComponentFilter,
   CheckerNameFilter,
+  GuidelineFilter,
   CheckerMessageFilter,
   BaseFilterMixin,
   BugPathLengthFilter
