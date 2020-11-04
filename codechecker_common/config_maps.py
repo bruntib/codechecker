@@ -226,7 +226,7 @@ class GuidelineMap(Mapping):
         """
         result = []
         for checker, guidelines in self.store['mapping'].items():
-            if any(rule in rules for _, rules in guidelines.iter()):
+            if any(rule in rules for _, rules in guidelines.items()):
                 result.append(checker)
         return result
 

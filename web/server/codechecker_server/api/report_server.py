@@ -206,7 +206,7 @@ def get_component_values(session, component_name):
     return skip, include
 
 
-def process_report_filter(session, run_ids, report_filter, cmp_data=None):
+def process_report_filter(session, run_ids, report_filter, cmp_data, context):
     """
     Process the new report filter.
     """
@@ -238,8 +238,10 @@ def process_report_filter(session, run_ids, report_filter, cmp_data=None):
 
     if report_filter.guidelines:
         checker_names = set()
-        for rule in guidelines:
-            checker_names.update(self.__context.guideline_map.by_rule(rule))
+        for guideline in report_filter.guidelines:
+            for rule in guideline.rules:
+                checker_names.update(
+                    context.guideline_map.by_rule(rule))
         AND.append(Report.checker_id.in_(checker_names))
 
     if report_filter.analyzerNames:
@@ -1160,7 +1162,6 @@ class ThriftRequestHandler(object):
                 column=report.column,
                 checkerId=report.checker_id,
                 severity=report.severity,
-                guidelines=self.__get_guideline_rules(report.checker_id),
                 reviewData=create_review_data(review_status),
                 detectionStatus=detection_status_enum(report.detection_status),
                 detectedAt=str(report.detected_at),
@@ -1256,7 +1257,8 @@ class ThriftRequestHandler(object):
             results = []
 
             filter_expression = process_report_filter(session, run_ids,
-                                                      report_filter, cmp_data)
+                                                      report_filter, cmp_data,
+                                                      self.__context)
 
             is_unique = report_filter is not None and report_filter.isUnique
             if is_unique:
@@ -1330,8 +1332,6 @@ class ThriftRequestHandler(object):
                                    checkerMsg=checker_msg,
                                    checkerId=checker,
                                    severity=severity,
-                                   guidelines
-                                   =self.__get_guideline_rules(checker),
                                    reviewData=review_data,
                                    detectedAt=str(detected_at),
                                    fixedAt=str(fixed_at),
@@ -1385,8 +1385,6 @@ class ThriftRequestHandler(object):
                                    column=column,
                                    checkerId=checker,
                                    severity=severity,
-                                   guidelines
-                                   =self.__get_guideline_rules(checker),
                                    reviewData=review_data,
                                    detectionStatus=detection_status_enum(
                                        d_status),
@@ -1412,7 +1410,8 @@ class ThriftRequestHandler(object):
         results = []
         with DBSession(self.__Session) as session:
             filter_expression = process_report_filter(session, run_ids,
-                                                      report_filter)
+                                                      report_filter, None,
+                                                      self.__context)
 
             count_expr = create_count_expression(report_filter)
             q = session.query(Run.id,
@@ -1447,7 +1446,8 @@ class ThriftRequestHandler(object):
 
         with DBSession(self.__Session) as session:
             filter_expression = process_report_filter(session, run_ids,
-                                                      report_filter, cmp_data)
+                                                      report_filter, cmp_data,
+                                                      self.__context)
 
             q = session.query(Report.bug_id)
             q = apply_report_filter(q, filter_expression)
@@ -1864,7 +1864,8 @@ class ThriftRequestHandler(object):
         results = []
         with DBSession(self.__Session) as session:
             filter_expression = process_report_filter(session, run_ids,
-                                                      report_filter, cmp_data)
+                                                      report_filter, cmp_data,
+                                                      self.__context)
 
             is_unique = report_filter is not None and report_filter.isUnique
             if is_unique:
@@ -1904,41 +1905,23 @@ class ThriftRequestHandler(object):
 
     @exc_to_thrift_reqfail
     @timeit
-    def getGuidelineCounts(self, run_ids, report_filter, cmp_data, limit,
-                           offset):
+    def getGuidelines(self, run_ids, report_filter, cmp_data, limit, offset):
         self.__require_access()
 
         limit = verify_limit_range(limit)
 
-        results = []
-        guideline_counts = defaultdict(int)
+        collection = defaultdict(set)
+        for _, guidelines in self.__context.guideline_map.items():
+            for guideline, rules in guidelines.items():
+                collection[guideline].update(rules)
 
-        with DBSession(self.__Session) as session:
-            filter_expression = process_report_filter(session, run_ids,
-                                                      report_filter, cmp_data)
+        result = []
 
-            is_unique = report_filter is not None and report_filter.isUnique
+        for guideline, rules in collection.items():
+            result.append(Guideline(name=guideline, rules=sorted(list(rules))))
 
-            if is_unique:
-                q = session.query(func.max(Report.checker_id).label(
-                                      'checker_id'),
-                                  Report.bug_id)
-            else:
-                q = session.query(Report.check_id,
-                                  func.count(Report.id))
+        return result
 
-            q = apply_report_filter(q, filter_expression)
-
-            if is_unique:
-                q = q.group_by(Report.bug_id).subquery()
-                unique_checker_q = session.query(q.c.checker_id,
-                                                 func.count(q.c.bug_id)) \
-                    .group_by(q.c.checker_id)
-            else:
-                unique_checker_q = q.group_by(Report.checker_id)
-
-            for checker, count in unique_checker_q:
-                guideline_counts[] += count
 
     @exc_to_thrift_reqfail
     @timeit
@@ -1956,7 +1939,8 @@ class ThriftRequestHandler(object):
         results = {}
         with DBSession(self.__Session) as session:
             filter_expression = process_report_filter(session, run_ids,
-                                                      report_filter, cmp_data)
+                                                      report_filter, cmp_data,
+                                                      self.__context)
 
             is_unique = report_filter is not None and report_filter.isUnique
             if is_unique:
@@ -1999,7 +1983,8 @@ class ThriftRequestHandler(object):
         results = {}
         with DBSession(self.__Session) as session:
             filter_expression = process_report_filter(session, run_ids,
-                                                      report_filter, cmp_data)
+                                                      report_filter, cmp_data,
+                                                      self.__context)
 
             is_unique = report_filter is not None and report_filter.isUnique
             if is_unique:
@@ -2038,7 +2023,8 @@ class ThriftRequestHandler(object):
         results = {}
         with DBSession(self.__Session) as session:
             filter_expression = process_report_filter(session, run_ids,
-                                                      report_filter, cmp_data)
+                                                      report_filter, cmp_data,
+                                                      self.__context)
 
             is_unique = report_filter is not None and report_filter.isUnique
             if is_unique:
@@ -2079,7 +2065,8 @@ class ThriftRequestHandler(object):
         results = defaultdict(int)
         with DBSession(self.__Session) as session:
             filter_expression = process_report_filter(session, run_ids,
-                                                      report_filter, cmp_data)
+                                                      report_filter, cmp_data,
+                                                      self.__context)
 
             is_unique = report_filter is not None and report_filter.isUnique
             if is_unique:
@@ -2127,7 +2114,8 @@ class ThriftRequestHandler(object):
         results = {}
         with DBSession(self.__Session) as session:
             filter_expression = process_report_filter(session, run_ids,
-                                                      report_filter, cmp_data)
+                                                      report_filter, cmp_data,
+                                                      self.__context)
 
             stmt = session.query(Report.bug_id,
                                  Report.file_id)
@@ -2176,7 +2164,8 @@ class ThriftRequestHandler(object):
         results = []
         with DBSession(self.__Session) as session:
             filter_expression = process_report_filter(session, run_ids,
-                                                      report_filter, cmp_data)
+                                                      report_filter, cmp_data,
+                                                      self.__context)
 
             tag_run_ids = session.query(RunHistory.run_id.distinct())
 
@@ -2259,7 +2248,8 @@ class ThriftRequestHandler(object):
         results = {}
         with DBSession(self.__Session) as session:
             filter_expression = process_report_filter(session, run_ids,
-                                                      report_filter, cmp_data)
+                                                      report_filter, cmp_data,
+                                                      self.__context)
 
             count_expr = func.count(literal_column('*'))
 
@@ -2326,7 +2316,8 @@ class ThriftRequestHandler(object):
             try:
                 filter_expression = process_report_filter(session, run_ids,
                                                           report_filter,
-                                                          cmp_data)
+                                                          cmp_data,
+                                                          self.__context)
 
                 q = session.query(Report.id) \
                     .outerjoin(File, Report.file_id == File.id) \

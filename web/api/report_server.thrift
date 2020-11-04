@@ -153,11 +153,8 @@ struct ReportDetails {
   3: optional ExtendedReportDataList extendedData,
 }
 
-// The "name" component of this struct is optional, because we use this for
-// filtering as well. In this case it is possible to filter only for a set of
-// rules and not the whole guideline.
 struct Guideline {
-  1: optional string name,
+  1: string name,
   2: list<string> rules
 }
 typedef list<Guideline> GuidelineList
@@ -252,7 +249,6 @@ struct ReportData {
   15: i64             bugPathLength,   // Length of the bug path.
   16: optional ReportDetails details,  // Details of the report.
   17: optional string analyzerName,    // Analyzer name.
-  18: optional GuidelineList guidelines, // Guideline info which the checker belongs to.
 }
 typedef list<ReportData> ReportDataList
 
@@ -310,12 +306,6 @@ struct CheckerCount {
   3: i64         count     // Number of reports.
 }
 typedef list<CheckerCount> CheckerCounts
-
-struct GuidelineCount {
-  1: string rule,
-  2: i64    count
-}
-typedef list<GuidelineCount> GuidelineCounts
 
 struct CommentData {
   1: i64     id,
@@ -615,6 +605,17 @@ service codeCheckerDBAccess {
                                  4: i64          limit,
                                  5: i64          offset)
                                  throws (1: codechecker_api_shared.RequestFailed requestError),
+
+  // If the run id list is empty the metrics will be counted
+  // for all of the runs and in compare mode all of the runs
+  // will be used as a baseline excluding the runs in compare data.
+  // PERMISSION: PRODUCT_ACCESS
+  GuidelineList getGuidelines(1: list<i64>    runIds,
+                              2: ReportFilter reportFilter,
+                              3: CompareData  cmpData,
+                              4: i64          limit,
+                              5: i64          offset)
+                              throws (1: codechecker_api_shared.RequestFailed requestError),
 
   // If the run id list is empty the metrics will be counted
   // for all of the runs and in compare mode all of the runs
