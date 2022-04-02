@@ -14,8 +14,9 @@ import os
 import re
 import shlex
 import subprocess
-from typing import List, Tuple
+from typing import List, Literal, Tuple, Union
 
+from codechecker_common import util
 from codechecker_common.logger import get_logger
 
 from codechecker_analyzer import env
@@ -127,6 +128,49 @@ class ClangTidy(analyzer_base.SourceAnalyzer):
             return parse_analyzer_config(result)
         except (subprocess.CalledProcessError, OSError):
             return []
+
+    @classmethod
+    def check_analyzer_availability(cls, context) -> Union[Literal[True], str]:
+        """
+        This function returns True if "clang-tidy" analyzer available in the
+        environment. If not found in PATH then it tries to find it with an
+        added version number (e.g. clang-tidy-14). If the clang-tidy is not
+        found then this function retuns its reason.
+
+        TODO: When "clang-tidy" binary is not found in the environment but
+        clang-tidy-14 is found then this function changes this binary name in
+        context.analyzer_binaries. "context" object shouldn't store binary's
+        location, but it should be stored in this class as some static member.
+        """
+        check_env = env.extend(
+            context.path_env_extra, context.ld_lib_path_extra)
+
+        analyzer_bin = context.analyzer_binaries.get(cls.ANALYZER_NAME)
+        if not analyzer_bin:
+            return "Failed to detect analyzer binary!"
+        elif not os.path.isabs(analyzer_bin):
+            # If the analyzer is not in an absolute path, try to find it...
+            found_bin = cls.resolve_missing_binary(analyzer_bin, check_env)
+
+            # found_bin is an absolute path, an executable in one of the
+            # PATH folders.
+            # If found_bin is the same as the original binary, ie., normally
+            # calling the binary without any search would have resulted in
+            # the same binary being called, it's NOT a "not found".
+            if found_bin and os.path.basename(found_bin) != analyzer_bin:
+                LOG.debug("Configured binary '%s' for analyzer '%s' was "
+                          "not found, but environment PATH contains '%s'.",
+                          analyzer_bin, cls.ANALYZER_NAME, found_bin)
+                context.analyzer_binaries[cls.ANALYZER_NAME] = \
+                    os.path.realpath(found_bin)
+
+            analyzer_bin = found_bin
+
+        if not analyzer_bin or \
+                not util.is_binary_available(analyzer_bin, check_env):
+            return "Cannot execute analyzer binary!"
+
+        return True
 
     def get_checker_list(self, config) -> Tuple[List[str], List[str]]:
         """

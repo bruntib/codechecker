@@ -12,7 +12,7 @@ Tests for analyzer features.
 
 import unittest
 
-import codechecker_analyzer.host_check as hc
+import codechecker_analyzer.analyzers.clangsa.host_check as hc
 
 
 class Test_has_analyzer_option(unittest.TestCase):

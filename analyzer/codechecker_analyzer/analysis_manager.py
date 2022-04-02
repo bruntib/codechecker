@@ -59,8 +59,7 @@ def print_analyzer_statistic_summary(metadata_analyzers, status, msg=None):
             LOG.info("  %s: %s", analyzer_type, res)
 
 
-def worker_result_handler(results, metadata_tool, output_path,
-                          analyzer_binaries):
+def worker_result_handler(results, metadata_tool, output_path):
     """ Print the analysis summary. """
     skipped_num = 0
     reanalyzed_num = 0
@@ -810,8 +809,7 @@ def start_workers(actions_map, actions, context, analyzer_config_map,
                            analyzed_actions,
                            1,
                            callback=lambda results: worker_result_handler(
-                               results, metadata_tool, output_path,
-                               context.analyzer_binaries)
+                               results, metadata_tool, output_path)
                            ).get(timeout)
 
             pool.close()

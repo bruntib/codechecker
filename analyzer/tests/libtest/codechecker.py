@@ -17,7 +17,7 @@ import subprocess
 from distutils import util
 from typing import Dict
 
-from codechecker_analyzer import host_check
+from codechecker_analyzer.analyzers.clangsa import host_check
 
 from . import project
 

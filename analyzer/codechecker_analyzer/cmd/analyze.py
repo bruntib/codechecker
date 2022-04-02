@@ -447,7 +447,7 @@ def add_arguments_to_parser(parser):
                                     "one.")
 
     context = analyzer_context.get_context()
-    clang_has_z3 = analyzer_types.is_z3_capable(context)
+    clang_has_z3 = clangsa.analyzer.ClangSA.is_z3_capable(context)
 
     if clang_has_z3:
         analyzer_opts.add_argument('--z3',
@@ -460,7 +460,8 @@ def add_arguments_to_parser(parser):
                                         "than the default range-based "
                                         "constraint solver.")
 
-    clang_has_z3_refutation = analyzer_types.is_z3_refutation_capable(context)
+    clang_has_z3_refutation = \
+        clangsa.analyzer.ClangSA.is_z3_refutation_capable(context)
 
     if clang_has_z3_refutation:
         analyzer_opts.add_argument('--z3-refutation',
@@ -478,7 +479,7 @@ def add_arguments_to_parser(parser):
                                         "that much of a slowdown compared to "
                                         "using the Z3 solver only.")
 
-    if analyzer_types.is_ctu_capable(context):
+    if clangsa.analyzer.ClangSA.is_ctu_capable(context):
         ctu_opts = parser.add_argument_group(
             "cross translation unit analysis arguments",
             """
@@ -533,7 +534,7 @@ Cross-TU analysis. By default, no CTU analysis is run when
                                    "Cross-TU enabled.")
 
         # Only check for AST loading modes if CTU is available.
-        if analyzer_types.is_ctu_on_demand_available(context):
+        if clangsa.analyzer.ClangSA.is_ctu_on_demand_available(context):
             ctu_opts.add_argument('--ctu-ast-mode',
                                   action='store',
                                   dest='ctu_ast_mode',
@@ -554,7 +555,7 @@ Cross-TU analysis. By default, no CTU analysis is run when
                                        "phase of the analysis. (default: "
                                        "parse-on-demand)")
 
-    if analyzer_types.is_statistics_capable(context):
+    if clangsa.analyzer.ClangSA.is_statistics_capable(context):
         stat_opts = parser.add_argument_group(
             "Statistics analysis feature arguments",
             """

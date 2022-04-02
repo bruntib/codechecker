@@ -15,8 +15,9 @@ import re
 import shlex
 import subprocess
 
-from typing import Dict, List
+from typing import Dict, List, Literal, Union
 
+from codechecker_common import util
 from codechecker_common.logger import get_logger
 
 from codechecker_analyzer import env
@@ -29,6 +30,7 @@ from ..flag import prepend_all
 from . import clang_options
 from . import config_handler
 from . import ctu_triple_arch
+from . import host_check
 from . import version
 from .result_handler import ClangSAResultHandler
 
@@ -140,6 +142,125 @@ class ClangSA(analyzer_base.SourceAnalyzer):
         """
 
         self.__checker_configs.append(checker_cfg)
+
+    @classmethod
+    def check_analyzer_availability(cls, context) -> Union[Literal[True], str]:
+        """
+        This function returns True if "clang" as ClangSA analyzer available in
+        the environment. If not found in PATH then it tries to find it with an
+        added version number (e.g. clang-14).
+        If the clang is not found then this function retuns its reason.
+
+        TODO: When "clang" binary is not found in the environment but clang-14
+        is found then this function changes this binary name in
+        context.analyzer_binaries. "context" object shouldn't store binary's
+        location, but it should be stored in this class as some static member.
+        """
+        check_env = env.extend(
+            context.path_env_extra, context.ld_lib_path_extra)
+
+        analyzer_bin = context.analyzer_binaries.get(cls.ANALYZER_NAME)
+        if not analyzer_bin:
+            return "Failed to detect analyzer binary!"
+        elif not os.path.isabs(analyzer_bin):
+            # If the analyzer is not in an absolute path, try to find it...
+            found_bin = cls.resolve_missing_binary(analyzer_bin, check_env)
+
+            # found_bin is an absolute path, an executable in one of the
+            # PATH folders.
+            # If found_bin is the same as the original binary, ie., normally
+            # calling the binary without any search would have resulted in
+            # the same binary being called, it's NOT a "not found".
+            if found_bin and os.path.basename(found_bin) != analyzer_bin:
+                LOG.debug("Configured binary '%s' for analyzer '%s' was "
+                          "not found, but environment PATH contains '%s'.",
+                          analyzer_bin, cls.ANALYZER_NAME, found_bin)
+                context.analyzer_binaries[cls.ANALYZER_NAME] = \
+                    os.path.realpath(found_bin)
+
+            analyzer_bin = found_bin
+
+        if not analyzer_bin or \
+                not util.is_binary_available(analyzer_bin, check_env):
+            return "Cannot execute analyzer binary!"
+
+        return True
+
+    @classmethod
+    def is_ctu_capable(cls, context):
+        """ Detects if the current clang is CTU compatible. """
+        if cls.check_analyzer_availability(context) is not True:
+            return False
+
+        clangsa_cfg = cls.construct_config_handler([], context)
+        return clangsa_cfg.ctu_capability.is_ctu_capable
+
+    @classmethod
+    def is_ctu_on_demand_available(cls, context):
+        """
+        Detects if the current clang is capable of on-demand AST loading.
+        """
+        if cls.check_analyzer_availability(context) is not True:
+            return False
+
+        clangsa_cfg = cls.construct_config_handler([], context)
+        return clangsa_cfg.ctu_capability.is_on_demand_ctu_available
+
+    @classmethod
+    def is_statistics_capable(cls, context):
+        """ Detects if the current clang is Statistics compatible. """
+        if cls.check_analyzer_availability(context) is not True:
+            return False
+
+        clangsa_cfg = cls.construct_config_handler([], context)
+
+        check_env = env.extend(
+            context.path_env_extra, context.ld_lib_path_extra)
+
+        checkers = cls.get_analyzer_checkers(
+            clangsa_cfg, check_env, True, True)
+
+        stat_checkers_pattern = re.compile(r'.+statisticscollector.+')
+
+        for checker_name, _ in checkers:
+            if stat_checkers_pattern.match(checker_name):
+                return True
+
+        return False
+
+    @classmethod
+    def is_z3_capable(cls, context):
+        """ Detects if the current clang is Z3 compatible. """
+        if cls.check_analyzer_availability(context) is not True:
+            return False
+
+        analyzer_binary = context.analyzer_binaries.get(cls.ANALYZER_NAME)
+
+        analyzer_env = env.extend(
+            context.path_env_extra, context.ld_lib_path_extra)
+
+        return host_check.has_analyzer_option(
+            analyzer_binary,
+            ['-Xclang', '-analyzer-constraints=z3'],
+            analyzer_env)
+
+    @classmethod
+    def is_z3_refutation_capable(cls, context):
+        """ Detects if the current clang is Z3 refutation compatible. """
+        # This function basically checks whether the corresponding analyzer
+        # config option exists i.e. it is visible on analyzer config option
+        # help page. However, it doesn't mean that Clang itself is compiled
+        # with Z3.
+        if not cls.is_z3_capable(context):
+            return False
+
+        analyzer_binary = context.analyzer_binaries.get(cls.ANALYZER_NAME)
+
+        analyzer_env = env.extend(
+            context.path_env_extra, context.ld_lib_path_extra)
+
+        return host_check.has_analyzer_config_option(
+            analyzer_binary, 'crosscheck-with-z3', analyzer_env)
 
     @classmethod
     def get_analyzer_checkers(

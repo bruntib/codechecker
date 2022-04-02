@@ -12,8 +12,8 @@ Clang Static Analyzer related functions.
 import subprocess
 
 from codechecker_common.logger import get_logger
-from codechecker_analyzer import host_check
-from codechecker_analyzer.analyzers.clangsa import clang_options, version
+from codechecker_analyzer.analyzers.clangsa import clang_options, host_check, \
+    version
 
 LOG = get_logger('analyzer.clangsa')
 

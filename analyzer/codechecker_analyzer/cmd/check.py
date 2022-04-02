@@ -19,7 +19,7 @@ import sys
 import tempfile
 
 from codechecker_analyzer import analyzer_context
-from codechecker_analyzer.analyzers import analyzer_types
+from codechecker_analyzer.analyzers import analyzer_types, clangsa
 from codechecker_analyzer.arg import \
         OrderedCheckersAction, OrderedConfigAction
 
@@ -395,7 +395,7 @@ used to generate a log file on the fly.""")
                                     "one.")
 
     context = analyzer_context.get_context()
-    clang_has_z3 = analyzer_types.is_z3_capable(context)
+    clang_has_z3 = clangsa.analyzer.ClangSA.is_z3_capable(context)
 
     if clang_has_z3:
         analyzer_opts.add_argument('--z3',
@@ -408,7 +408,8 @@ used to generate a log file on the fly.""")
                                         "than the default range-based "
                                         "constraint solver.")
 
-    clang_has_z3_refutation = analyzer_types.is_z3_refutation_capable(context)
+    clang_has_z3_refutation = \
+        clangsa.analyzer.ClangSA.is_z3_refutation_capable(context)
 
     if clang_has_z3_refutation:
         analyzer_opts.add_argument('--z3-refutation',
@@ -426,7 +427,7 @@ used to generate a log file on the fly.""")
                                         "that much of a slowdown compared to "
                                         "using the Z3 solver only.")
 
-    if analyzer_types.is_ctu_capable(context):
+    if clangsa.analyzer.ClangSA.is_ctu_capable(context):
         ctu_opts = parser.add_argument_group(
             "cross translation unit analysis arguments",
             """
@@ -482,7 +483,7 @@ is called.""")
                                    "Cross-TU enabled.")
 
         # Only check for AST loading modes if CTU is available.
-        if analyzer_types.is_ctu_on_demand_available(context):
+        if clangsa.analyzer.ClangSA.is_ctu_on_demand_available(context):
             ctu_opts.add_argument('--ctu-ast-mode',
                                   action='store',
                                   dest='ctu_ast_mode',
@@ -503,7 +504,7 @@ is called.""")
                                        "phase of the analysis. (default: "
                                        "parse-on-demand)")
 
-    if analyzer_types.is_statistics_capable(context):
+    if clangsa.analyzer.ClangSA.is_statistics_capable(context):
         stat_opts = parser.add_argument_group(
             "Statistics analysis feature arguments",
             """

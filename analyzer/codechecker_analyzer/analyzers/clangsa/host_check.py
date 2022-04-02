@@ -10,7 +10,6 @@ Check static analyzer and features on the host machine.
 """
 
 
-import errno
 import re
 import subprocess
 import tempfile
@@ -18,33 +17,6 @@ import tempfile
 from codechecker_common.logger import get_logger
 
 LOG = get_logger('analyzer')
-
-
-def check_clang(compiler_bin, env):
-    """
-    Simple check if clang is available.
-    """
-    clang_version_cmd = [compiler_bin, '--version']
-    LOG.debug_analyzer(' '.join(clang_version_cmd))
-    try:
-        res = subprocess.call(
-            clang_version_cmd,
-            env=env,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            encoding="utf-8",
-            errors="ignore")
-        if not res:
-            return True
-
-        LOG.debug_analyzer('Failed to run: "%s"', ' '.join(clang_version_cmd))
-        return False
-
-    except OSError as oerr:
-        if oerr.errno == errno.ENOENT:
-            LOG.error(oerr)
-            LOG.error('Failed to run: "%s"', ' '.join(clang_version_cmd))
-            return False
 
 
 def has_analyzer_config_option(clang_bin, config_option_name, env=None):

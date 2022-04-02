@@ -13,10 +13,8 @@ Prepare and start different analysis types
 from collections import defaultdict
 from multiprocessing.managers import SyncManager
 import os
-import shlex
 import shutil
 import signal
-import subprocess
 import time
 
 from codechecker_common.logger import get_logger
@@ -67,41 +65,6 @@ def create_actions_map(actions, manager):
                       act.source, act.target)
         result[key] = act
     return result
-
-
-def __get_analyzer_version(context, analyzer_config_map):
-    """
-    Get the path and the version of the analyzer binaries.
-    """
-    check_env = env.extend(context.path_env_extra,
-                           context.ld_lib_path_extra)
-
-    # Get the analyzer binaries from the config_map which
-    # contains only the checked and available analyzers.
-    versions = {}
-    for _, analyzer_cfg in analyzer_config_map.items():
-        analyzer_bin = analyzer_cfg.analyzer_binary
-        version = [analyzer_bin, ' --version']
-        try:
-            output = subprocess.check_output(
-                shlex.split(
-                    ' '.join(version)),
-                env=check_env,
-                universal_newlines=True,
-                encoding="utf-8",
-                errors="ignore")
-            versions[analyzer_bin] = output
-        except subprocess.CalledProcessError as oerr:
-            LOG.warning("Failed to get analyzer version: %s",
-                        ' '.join(version))
-            LOG.warning(oerr.output)
-            LOG.warning(oerr.stderr)
-        except OSError as oerr:
-            LOG.warning("Failed to get analyzer version: %s",
-                        ' '.join(version))
-            LOG.warning(oerr.strerror)
-
-    return versions
 
 
 def __mgr_init():
@@ -370,8 +333,6 @@ def perform_analysis(args, skip_handlers, context, actions, metadata_tool,
 
     end_time = time.time()
     LOG.info("Analysis length: %s sec.", end_time - start_time)
-
-    analyzer_types.print_unsupported_analyzers(errored)
 
     metadata_tool['timestamps'] = {'begin': start_time,
                                    'end': end_time}
