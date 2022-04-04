@@ -94,7 +94,7 @@ package_report_converter: build_report_converter package_dir_structure
 # This target should be used from the top level Makefile to build the package
 # together with the analyzer part. This way we will not build tools
 # multiple times.
-package_web: check_codechecker_api_version check_dist package_dir_structure package_report_converter $(DIST_DIR)
+package_web: check_dist package_dir_structure package_report_converter $(DIST_DIR)
 ifeq ($(BUILD_UI_DIST),YES)
 	mkdir -p $(CC_BUILD_WEB_DIR)
 	cp -r $(DIST_DIR)/* $(CC_BUILD_WEB_DIR)

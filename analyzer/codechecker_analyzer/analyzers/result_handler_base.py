@@ -55,7 +55,6 @@ class ResultHandler(metaclass=ABCMeta):
         self.analyzer_cmd = []
         self.analyzer_stdout = ''
         self.analyzer_stderr = ''
-        self.checker_labels = None
         self.skiplist_handler = None
         self.analyzed_source_file = None
         self.analyzer_returncode = 1

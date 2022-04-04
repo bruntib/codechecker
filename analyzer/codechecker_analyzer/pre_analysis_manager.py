@@ -17,11 +17,11 @@ import sys
 import traceback
 import uuid
 
-from codechecker_analyzer import env
 from codechecker_common.logger import get_logger
 
 from codechecker_statistics_collector import post_process_stats
 
+from . import analyzer_context
 from .analyzers import analyzer_base
 from .analyzers.clangsa import ctu_manager, ctu_triple_arch
 from .analyzers.clangsa import statistics
@@ -83,11 +83,9 @@ def init_worker(checked_num, action_num):
 
 
 def pre_analyze(params):
-    action, context, clangsa_config, skip_handlers, \
-        ctu_data, statistics_data = params
+    action, clangsa_config, skip_handlers, ctu_data, statistics_data = params
 
-    analyzer_environment = env.extend(context.path_env_extra,
-                                      context.ld_lib_path_extra)
+    analyzer_environment = analyzer_context.get_context().analyzer_env
 
     progress_checked_num.value += 1
 
@@ -153,7 +151,7 @@ def pre_analyze(params):
         raise
 
 
-def run_pre_analysis(actions, context, clangsa_config,
+def run_pre_analysis(actions, clangsa_config,
                      jobs, skip_handlers, ctu_data, statistics_data, manager):
     """
     Run multiple pre analysis jobs before the actual analysis.
@@ -194,7 +192,6 @@ def run_pre_analysis(actions, context, clangsa_config,
 
     try:
         collect_actions = [(build_action,
-                            context,
                             clangsa_config,
                             skip_handlers,
                             ctu_data,

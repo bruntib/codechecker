@@ -24,7 +24,6 @@ from threading import Timer
 
 import psutil
 
-from codechecker_analyzer import env
 from codechecker_common.logger import get_logger
 
 from codechecker_statistics_collector.collectors.special_return_value import \
@@ -167,7 +166,7 @@ def is_ctu_active(source_analyzer):
         source_analyzer.is_ctu_enabled()
 
 
-def prepare_check(action, analyzer_config, output_dir, checker_labels,
+def prepare_check(action, analyzer_config, output_dir,
                   skip_handlers, statistics_data, disable_ctu=False):
     """ Construct the source analyzer and result handler. """
     # Create a source analyzer.
@@ -207,7 +206,6 @@ def prepare_check(action, analyzer_config, output_dir, checker_labels,
     # which only returns metadata, but can't process the results.
     rh = source_analyzer.construct_result_handler(action,
                                                   output_dir,
-                                                  checker_labels,
                                                   skip_handlers)
 
     # NOTICE!
@@ -486,10 +484,10 @@ def check(check_data):
 
     skiplist handler is None if no skip file was configured.
     """
-    actions_map, action, context, analyzer_config, \
+    actions_map, action, analyzer_config, \
         output_dir, skip_handlers, quiet_output_on_stdout, \
         capture_analysis_output, generate_reproducer, analysis_timeout, \
-        analyzer_environment, ctu_reanalyze_on_failure, \
+        ctu_reanalyze_on_failure, \
         output_dirs, statistics_data = check_data
 
     failed_dir = output_dirs["failed"]
@@ -507,7 +505,7 @@ def check(check_data):
             raise Exception("Analyzer configuration is missing.")
 
         source_analyzer, rh = prepare_check(action, analyzer_config,
-                                            output_dir, context.checker_labels,
+                                            output_dir,
                                             skip_handlers, statistics_data)
 
         reanalyzed = os.path.exists(rh.analyzer_result_file)
@@ -544,8 +542,7 @@ def check(check_data):
         result_file_exists = os.path.exists(rh.analyzer_result_file)
 
         # Fills up the result handler with the analyzer information.
-        source_analyzer.analyze(analyzer_cmd, rh, analyzer_environment,
-                                __create_timeout)
+        source_analyzer.analyze(analyzer_cmd, rh, __create_timeout)
 
         # If execution reaches this line, the analyzer process has quit.
         if timeout_cleanup[0]():
@@ -637,7 +634,7 @@ def check(check_data):
                 # Try to reanalyze with CTU disabled.
                 source_analyzer, rh = \
                     prepare_check(action, analyzer_config,
-                                  output_dir, context.checker_labels,
+                                  output_dir,
                                   skip_handlers, statistics_data,
                                   True)
                 reanalyzed = os.path.exists(rh.analyzer_result_file)
@@ -647,9 +644,7 @@ def check(check_data):
 
                 # Fills up the result handler with
                 # the analyzer information.
-                source_analyzer.analyze(analyzer_cmd,
-                                        rh,
-                                        analyzer_environment)
+                source_analyzer.analyze(analyzer_cmd, rh)
 
                 return_codes = rh.analyzer_returncode
                 if rh.analyzer_returncode == 0:
@@ -718,7 +713,7 @@ def skip_cpp(compile_actions, skip_handlers):
     return analyze, skip
 
 
-def start_workers(actions_map, actions, context, analyzer_config_map,
+def start_workers(actions_map, actions, analyzer_config_map,
                   jobs, output_path, skip_handlers, metadata_tool,
                   quiet_analyze, capture_analysis_output, generate_reproducer,
                   timeout, ctu_reanalyze_on_failure, statistics_data, manager,
@@ -771,13 +766,8 @@ def start_workers(actions_map, actions, context, analyzer_config_map,
                    'reproducer': reproducer_dir,
                    'ctu_connections': ctu_connections_dir}
 
-    # Construct analyzer env.
-    analyzer_environment = env.extend(context.path_env_extra,
-                                      context.ld_lib_path_extra)
-
     analyzed_actions = [(actions_map,
                          build_action,
-                         context,
                          analyzer_config_map.get(build_action.analyzer_type),
                          output_path,
                          skip_handlers,
@@ -785,7 +775,6 @@ def start_workers(actions_map, actions, context, analyzer_config_map,
                          capture_analysis_output,
                          generate_reproducer,
                          timeout,
-                         analyzer_environment,
                          ctu_reanalyze_on_failure,
                          output_dirs,
                          statistics_data)

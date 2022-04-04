@@ -16,6 +16,7 @@ import collections
 import platform
 import subprocess
 
+from codechecker_analyzer import analyzer_context
 from codechecker_common.logger import get_logger
 
 LOG = get_logger('system')
@@ -62,12 +63,13 @@ class AnalyzerConfigHandler(metaclass=ABCMeta):
         """ Full path of the analyzer plugins. """
         return []
 
-    def get_version(self, env=None):
+    def get_version(self):
         """ Get analyzer version information. """
+        context = analyzer_context.get_context()
         version = [self.analyzer_binary, '--version']
         try:
             output = subprocess.check_output(version,
-                                             env=env,
+                                             env=context.analyzer_env,
                                              universal_newlines=True,
                                              encoding="utf-8",
                                              errors="ignore")
@@ -126,7 +128,6 @@ class AnalyzerConfigHandler(metaclass=ABCMeta):
         return reserved_names
 
     def initialize_checkers(self,
-                            analyzer_context,
                             checkers,
                             cmdline_enable=[],
                             enable_all=False):
@@ -144,7 +145,6 @@ class AnalyzerConfigHandler(metaclass=ABCMeta):
           - Without prefix it means a profile name, a guideline name or a
             checker group/name in this priority order.
 
-        analyzer_context -- Context object.
         checkers -- [(checker name, description), ...] Checkers to add with
                     their description.
         cmdline_enable -- [(argument, enabled), ...] Arguments of
@@ -153,7 +153,7 @@ class AnalyzerConfigHandler(metaclass=ABCMeta):
         enable_all -- Boolean value whether "--enable-all" is given.
         """
 
-        checker_labels = analyzer_context.checker_labels
+        checker_labels = analyzer_context.get_context().checker_labels
 
         # Add all checkers marked as default. This means the analyzer should
         # manage whether it is enabled or disabled.

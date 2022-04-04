@@ -24,7 +24,7 @@ from typing import List
 from codechecker_report_converter.util import load_json_or_empty
 from tu_collector import tu_collector
 
-from codechecker_analyzer import analyzer, analyzer_context, env
+from codechecker_analyzer import analyzer, analyzer_context
 from codechecker_analyzer.analyzers import analyzer_types, clangsa
 from codechecker_analyzer.arg import \
         OrderedCheckersAction, OrderedConfigAction
@@ -446,8 +446,7 @@ def add_arguments_to_parser(parser):
                                     "the analysis is considered as a failed "
                                     "one.")
 
-    context = analyzer_context.get_context()
-    clang_has_z3 = clangsa.analyzer.ClangSA.is_z3_capable(context)
+    clang_has_z3 = clangsa.analyzer.ClangSA.is_z3_capable()
 
     if clang_has_z3:
         analyzer_opts.add_argument('--z3',
@@ -461,7 +460,7 @@ def add_arguments_to_parser(parser):
                                         "constraint solver.")
 
     clang_has_z3_refutation = \
-        clangsa.analyzer.ClangSA.is_z3_refutation_capable(context)
+        clangsa.analyzer.ClangSA.is_z3_refutation_capable()
 
     if clang_has_z3_refutation:
         analyzer_opts.add_argument('--z3-refutation',
@@ -479,7 +478,7 @@ def add_arguments_to_parser(parser):
                                         "that much of a slowdown compared to "
                                         "using the Z3 solver only.")
 
-    if clangsa.analyzer.ClangSA.is_ctu_capable(context):
+    if clangsa.analyzer.ClangSA.is_ctu_capable():
         ctu_opts = parser.add_argument_group(
             "cross translation unit analysis arguments",
             """
@@ -534,7 +533,7 @@ Cross-TU analysis. By default, no CTU analysis is run when
                                    "Cross-TU enabled.")
 
         # Only check for AST loading modes if CTU is available.
-        if clangsa.analyzer.ClangSA.is_ctu_on_demand_available(context):
+        if clangsa.analyzer.ClangSA.is_ctu_on_demand_available():
             ctu_opts.add_argument('--ctu-ast-mode',
                                   action='store',
                                   dest='ctu_ast_mode',
@@ -555,7 +554,7 @@ Cross-TU analysis. By default, no CTU analysis is run when
                                        "phase of the analysis. (default: "
                                        "parse-on-demand)")
 
-    if clangsa.analyzer.ClangSA.is_statistics_capable(context):
+    if clangsa.analyzer.ClangSA.is_statistics_capable():
         stat_opts = parser.add_argument_group(
             "Statistics analysis feature arguments",
             """
@@ -944,8 +943,7 @@ def main(args):
         ctu_or_stats_enabled = True
 
     context = analyzer_context.get_context()
-    analyzer_env = env.extend(context.path_env_extra,
-                              context.ld_lib_path_extra)
+    analyzer_env = context.analyzer_env
 
     # Number of all the compilation commands in the parsed log files,
     # logged by the logger.
@@ -1061,8 +1059,7 @@ def main(args):
     LOG.debug_analyzer("Compile commands forwarded for analysis: %d",
                        compile_cmd_count.analyze)
 
-    analyzer.perform_analysis(args, skip_handlers, context, actions,
-                              metadata_tool,
+    analyzer.perform_analysis(args, skip_handlers, actions, metadata_tool,
                               compile_cmd_count)
 
     __update_skip_file(args)

@@ -11,17 +11,19 @@
 import os
 import re
 
+from . import analyzer_context
 from codechecker_common.logger import get_logger
 
 LOG = get_logger('system')
 
 
-def get_log_env(logfile, context, original_env):
+def get_log_env(logfile, original_env):
     """
     Environment for logging. With the ld logger.
     Keep the original environment unmodified as possible.
     Only environment variables required for logging are changed.
     """
+    context = analyzer_context.get_context()
     new_env = original_env
 
     new_env[context.env_var_cc_logger_bin] = context.path_logger_bin
@@ -66,9 +68,8 @@ def extend(path_env_extra, ld_lib_path_extra):
             'Extending LD_LIBRARY_PATH environment variable with: ' +
             extra_lib)
         try:
-            original_ld_library_path = new_env['LD_LIBRARY_PATH']
             new_env['LD_LIBRARY_PATH'] = \
-                extra_lib + ':' + original_ld_library_path
+                extra_lib + ':' + new_env['LD_LIBRARY_PATH']
         except KeyError:
             new_env['LD_LIBRARY_PATH'] = extra_lib
 

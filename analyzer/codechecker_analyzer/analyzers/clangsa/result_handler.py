@@ -16,6 +16,7 @@ from typing import Optional
 from codechecker_report_converter.report.parser.base import AnalyzerInfo
 from codechecker_report_converter.report import report_file
 from codechecker_report_converter.report.hash import get_report_hash, HashType
+from codechecker_analyzer import analyzer_context
 from codechecker_common.logger import get_logger
 from codechecker_common.skiplist_handler import SkipListHandlers
 
@@ -40,8 +41,10 @@ class ClangSAResultHandler(ResultHandler):
         into the database.
         """
         if os.path.exists(self.analyzer_result_file):
+            checker_labels = analyzer_context.get_context().checker_labels
+
             reports = report_file.get_reports(
-                self.analyzer_result_file, self.checker_labels,
+                self.analyzer_result_file, checker_labels,
                 source_dir_path=self.source_dir_path)
             reports = [r for r in reports if not r.skip(skip_handlers)]
 
@@ -56,5 +59,5 @@ class ClangSAResultHandler(ResultHandler):
                     report.report_hash = get_report_hash(report, hash_type)
 
             report_file.create(
-                self.analyzer_result_file, reports, self.checker_labels,
+                self.analyzer_result_file, reports, checker_labels,
                 self.analyzer_info)

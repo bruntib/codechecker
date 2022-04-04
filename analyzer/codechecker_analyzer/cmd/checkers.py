@@ -28,7 +28,6 @@ from codechecker_analyzer.analyzers.clangtidy.analyzer import ClangTidy
 from codechecker_common import arg, logger
 from codechecker_common.output import USER_FORMATS
 from codechecker_common.checker_labels import CheckerLabels
-from codechecker_analyzer import env
 from codechecker_analyzer.analyzers.config_handler import CheckerState
 
 LOG = logger.get_logger('system')
@@ -318,15 +317,12 @@ def __get_detailed_checker_info(
     context = analyzer_context.get_context()
 
     working_analyzers, _ = analyzer_types.check_supported_analyzers(
-        analyzer_types.supported_analyzers,
-        context)
+        analyzer_types.supported_analyzers)
 
     analyzer_config_map = analyzer_types.build_config_handlers(
-        args, context, working_analyzers)
+        args, working_analyzers)
 
-    analyzer_environment = env.extend(
-        context.path_env_extra,
-        context.ld_lib_path_extra)
+    analyzer_environment = context.analyzer_env
 
     checker_info = defaultdict(list)
 
@@ -334,8 +330,7 @@ def __get_detailed_checker_info(
         config_handler = analyzer_config_map.get(analyzer)
         analyzer_class = analyzer_types.supported_analyzers[analyzer]
 
-        checkers = analyzer_class.get_analyzer_checkers(
-            config_handler, analyzer_environment)
+        checkers = analyzer_class.get_analyzer_checkers(config_handler)
 
         profile_checkers = []
         if 'profile' in args:
@@ -358,8 +353,7 @@ def __get_detailed_checker_info(
         if 'guideline' in args:
             profile_checkers.append((__guideline_to_label(args, cl), True))
 
-        config_handler.initialize_checkers(
-            context, checkers, profile_checkers)
+        config_handler.initialize_checkers(checkers, profile_checkers)
 
         for checker, (state, description) in config_handler.checks().items():
             # severity = cl.severity(checker)
@@ -643,17 +637,12 @@ def __print_checker_config(args: argparse.Namespace):
     if args.output_format == 'custom':
         args.output_format = 'rows'
 
-    context = analyzer_context.get_context()
     working_analyzers, errored = analyzer_types.check_supported_analyzers(
-        args.analyzers,
-        context)
+        args.analyzers)
     analyzer_types.check_available_analyzers(working_analyzers, errored)
 
-    analyzer_environment = env.extend(context.path_env_extra,
-                                      context.ld_lib_path_extra)
-
     analyzer_config_map = analyzer_types.build_config_handlers(
-        args, context, working_analyzers)
+        args, working_analyzers)
 
     if 'details' in args:
         header = ['Option', 'Description']
@@ -669,8 +658,7 @@ def __print_checker_config(args: argparse.Namespace):
         config_handler = analyzer_config_map.get(analyzer)
         analyzer_class = analyzer_types.supported_analyzers[analyzer]
 
-        configs = analyzer_class.get_checker_config(config_handler,
-                                                    analyzer_environment)
+        configs = analyzer_class.get_checker_config(config_handler)
         if not configs:
             analyzer_failures.append(analyzer)
             continue

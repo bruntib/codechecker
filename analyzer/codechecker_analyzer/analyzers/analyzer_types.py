@@ -40,7 +40,7 @@ def check_available_analyzers(analyzers, errored):
         sys.exit(1)
 
 
-def check_supported_analyzers(analyzers, context):
+def check_supported_analyzers(analyzers):
     """
     Checks the given analyzers in the current context for their executability
     and support in CodeChecker.
@@ -64,7 +64,7 @@ def check_supported_analyzers(analyzers, context):
             continue
 
         check_result = supported_analyzers[analyzer_name] \
-            .check_analyzer_availability(context)
+            .check_analyzer_availability()
 
         if check_result is True:
             enabled_analyzers.add(analyzer_name)
@@ -93,7 +93,7 @@ def construct_analyzer(buildaction,
         return None
 
 
-def build_config_handlers(args, context, enabled_analyzers):
+def build_config_handlers(args, enabled_analyzers):
     """
     Handle config from command line or from config file if no command line
     config is given.
@@ -106,7 +106,7 @@ def build_config_handlers(args, context, enabled_analyzers):
 
     for ea in enabled_analyzers:
         config_handler = supported_analyzers[ea].\
-            construct_config_handler(args, context)
+            construct_config_handler(args)
         analyzer_config_map[ea] = config_handler
 
     return analyzer_config_map
