@@ -562,16 +562,16 @@ These arguments are only available if the Clang Static Analyzer supports
 Statistics-based analysis (e.g. statisticsCollector.ReturnValueCheck,
 statisticsCollector.SpecialReturnValue checkers are available).""")
 
-        stat_opts.add_argument('--stats-collect', '--stats-collect',
+        stat_opts.add_argument('--stats-collect',
                                action='store',
                                default=argparse.SUPPRESS,
-                               dest='stats_output',
+                               dest='stats_collect',
                                help="Perform the first, 'collect' phase of "
                                     "Statistical analysis. This phase "
                                     "generates extra files needed by "
                                     "statistics analysis, and "
                                     "puts them into "
-                                    "'<STATS_OUTPUT>'."
+                                    "'<STATS_COLLECT>'."
                                     " NOTE: If this argument is present, "
                                     "CodeChecker will NOT execute the "
                                     "analyzers!")
@@ -935,7 +935,7 @@ def main(args):
 
     # Skip list is applied only in pre-analysis
     # if --stats-collect was called explicitly.
-    if 'stats_output' in args and args.stats_output:
+    if 'stats_collect' in args and args.stats_collect:
         pre_analysis_skip_handlers = skip_handlers
         ctu_or_stats_enabled = True
 
@@ -943,7 +943,6 @@ def main(args):
         ctu_or_stats_enabled = True
 
     context = analyzer_context.get_context()
-    analyzer_env = context.analyzer_env
 
     # Number of all the compilation commands in the parsed log files,
     # logged by the logger.
@@ -979,8 +978,7 @@ def main(args):
 
     analyzer_clang_version = None
     if analyzer_clang_binary:
-        analyzer_clang_version = clangsa.version.get(analyzer_clang_binary,
-                                                     analyzer_env)
+        analyzer_clang_version = clangsa.version.get(analyzer_clang_binary)
 
     actions, skipped_cmp_cmd_count = log_parser.parse_unique_log(
         compile_commands,
@@ -992,7 +990,6 @@ def main(args):
         skip_handlers,
         pre_analysis_skip_handlers,
         ctu_or_stats_enabled,
-        analyzer_env,
         analyzer_clang_version)
 
     if not actions:

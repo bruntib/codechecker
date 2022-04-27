@@ -333,9 +333,6 @@ class OptionParserTest(unittest.TestCase):
     def test_ignore_xclang_flags_clang(self):
         """Skip some specific xclang constructs"""
 
-        def fake_clang_version(a, b):
-            return True
-
         clang_flags = ["-std=gnu++14",
                        "-Xclang", "-module-file-info",
                        "-Xclang", "-S",
@@ -352,8 +349,7 @@ class OptionParserTest(unittest.TestCase):
             "clang++ {} -c /tmp/a.cpp".format(' '.join(clang_flags)),
             "file": "/tmp/a.cpp"}
 
-        res = log_parser.parse_options(
-            xclang_skip, get_clangsa_version_func=fake_clang_version)
+        res = log_parser.parse_options(xclang_skip)
 
         self.assertEqual(["-std=gnu++14", "-Xclang", "-disable-O0-optnone"],
                          res.analyzer_options)
@@ -377,12 +373,7 @@ class OptionParserTest(unittest.TestCase):
         log_parser.ImplicitCompilerInfo.compiler_versions["clang++"] =\
             fake_clang_version
 
-        def fake_clangsa_version_func(compiler, env):
-            """Return always the fake compiler version"""
-            return fake_clang_version
-
-        res = log_parser.parse_options(
-            action, get_clangsa_version_func=fake_clangsa_version_func)
+        res = log_parser.parse_options(action)
         print(res)
         self.assertEqual(res.analyzer_options, [])
         self.assertEqual(res.source, 'main.cpp')
@@ -414,12 +405,7 @@ class OptionParserTest(unittest.TestCase):
         log_parser.ImplicitCompilerInfo.compiler_versions["clang++"] =\
             fake_clang_version
 
-        def fake_clangsa_version_func(compiler, env):
-            """Return always the fake compiler version"""
-            return fake_clang_version
-
-        res = log_parser.parse_options(
-            action, get_clangsa_version_func=fake_clangsa_version_func)
+        res = log_parser.parse_options(action)
         self.assertEqual(res.analyzer_options, keep)
 
     def test_preserve_flags(self):

@@ -1534,11 +1534,11 @@ Statistics analysis feature arguments:
   Statistics-based analysis (e.g. statisticsCollector.ReturnValueCheck,
   statisticsCollector.SpecialReturnValue checkers are available).
 
-  --stats-collect STATS_OUTPUT, --stats-collect STATS_OUTPUT
+  --stats-collect STATS_COLLECT, --stats-collect STATS_COLLECT
                         Perform the first, 'collect' phase of Statistical
                         analysis. This phase generates extra files needed by
                         statistics analysis, and puts them into
-                        '<STATS_OUTPUT>'. NOTE: If this argument is present,
+                        '<STATS_COLLECT>'. NOTE: If this argument is present,
                         CodeChecker will NOT execute the analyzers!
   --stats-use STATS_DIR, --stats-use STATS_DIR
                         Use the previously generated statistics results for

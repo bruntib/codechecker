@@ -11,7 +11,6 @@ Test the handling of implicitly and explicitly handled checkers in analyzers
 """
 
 
-import os
 import unittest
 
 from codechecker_analyzer import analyzer_context
@@ -84,9 +83,6 @@ class CheckerHandlingClangSATest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        os.environ['CC_DATA_FILES_DIR'] = \
-            os.path.join(os.environ['BUILD_DIR'], 'CodeChecker')
-
         context = analyzer_context.get_context()
         context._checker_labels = MockCheckerLabels()
 

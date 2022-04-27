@@ -542,8 +542,7 @@ class ClangSA(analyzer_base.SourceAnalyzer):
         handler.analyzer_plugins_dir = context.checker_plugin
         handler.analyzer_binary = context.analyzer_binaries.get(
             cls.ANALYZER_NAME)
-        handler.version_info = version.get(
-            handler.analyzer_binary, context.analyzer_env)
+        handler.version_info = version.get(handler.analyzer_binary)
 
         handler.report_hash = args.report_hash \
             if 'report_hash' in args else None

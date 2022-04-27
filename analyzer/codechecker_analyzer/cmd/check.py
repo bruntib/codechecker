@@ -510,16 +510,16 @@ These arguments are only available if the Clang Static Analyzer supports
 Statistics-based analysis (e.g. statisticsCollector.ReturnValueCheck,
 statisticsCollector.SpecialReturnValue checkers are available).""")
 
-        stat_opts.add_argument('--stats-collect', '--stats-collect',
+        stat_opts.add_argument('--stats-collect',
                                action='store',
                                default=argparse.SUPPRESS,
-                               dest='stats_output',
+                               dest='stats_collect',
                                help="Perform the first, 'collect' phase of "
                                     "Statistical analysis. This phase "
                                     "generates extra files needed by "
                                     "statistics analysis, and "
                                     "puts them into "
-                                    "'<STATS_OUTPUT>'."
+                                    "'<STATS_COLLECT>'."
                                     " NOTE: If this argument is present, "
                                     "CodeChecker will NOT execute the "
                                     "analyzers!")
@@ -818,7 +818,7 @@ def main(args):
                           'config_file',
                           'ctu_phases',
                           'ctu_reanalyze_on_failure',
-                          'stats_output',
+                          'stats_collect',
                           'stats_dir',
                           'stats_enabled',
                           'stats_relevance_threshold',

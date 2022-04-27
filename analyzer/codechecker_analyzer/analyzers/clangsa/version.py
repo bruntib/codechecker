@@ -12,6 +12,8 @@ import re
 import shutil
 import subprocess
 
+from codechecker_analyzer import analyzer_context
+
 
 class ClangVersionInfo:
     """ClangVersionInfo holds the version information of the used Clang."""
@@ -67,15 +69,23 @@ class ClangVersionInfoParser:
             version_match.group('vendor'))
 
 
-def get(clang_binary, env=None):
+def get(clang_binary):
     """Get and parse the version information from given clang binary
 
     Should return False for getting the version
     information not from a clang compiler.
     """
+    # TODO: Based on the function parameter the caller may assume that this
+    # function returns the version of any Clang binary. PATH and
+    # LD_LIBRARY_PATH environment variables are extended in
+    # Context.analyzer_env only if CC_ANALYZERS_FROM_PATH is not set, so this
+    # function works as expected even if Clang comes from the user's PATH. This
+    # environment was implicitly set even before this commit, when it came as
+    # a function parameter. But even then analyzer_env was given every time
+    # when this function was called.
     compiler_version = subprocess.check_output(
         [clang_binary, '--version'],
-        env=env,
+        env=analyzer_context.get_context().analyzer_env,
         encoding="utf-8",
         errors="ignore")
     version_parser = ClangVersionInfoParser(clang_binary)

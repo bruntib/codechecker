@@ -86,8 +86,8 @@ def __get_statistics_data(args):
         statistics_data = {
             'stats_out_dir': os.path.join(args.output_path, "stats")}
 
-    if 'stats_output' in args and args.stats_output:
-        statistics_data = {'stats_out_dir': args.stats_output}
+    if 'stats_collect' in args and args.stats_collect:
+        statistics_data = {'stats_out_dir': args.stats_collect}
 
     if statistics_data:
         statistics_data['stat_tmp_dir'] = \
@@ -281,7 +281,7 @@ def perform_analysis(args, skip_handlers, actions, metadata_tool,
         # Skip list is applied only in pre-analysis
         # if --ctu-collect or --stats-collect  was called explicitly
         if ((ctu_collect and not ctu_analyze)
-                or ("stats_output" in args and args.stats_output)):
+                or ("stats_collect" in args and args.stats_collect)):
             pre_anal_skip_handlers = skip_handlers
 
         clangsa_config = config_map.get(ClangSA.ANALYZER_NAME)
@@ -298,7 +298,7 @@ def perform_analysis(args, skip_handlers, actions, metadata_tool,
             LOG.error("Can not run pre analysis without clang "
                       "static analyzer configuration.")
 
-    if 'stats_output' in args and args.stats_output:
+    if 'stats_collect' in args and args.stats_collect:
         return
 
     if 'stats_dir' in args and args.stats_dir:
