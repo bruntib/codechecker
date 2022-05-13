@@ -25,7 +25,9 @@ from typing import Dict, List, Optional
 
 from codechecker_report_converter.util import load_json_or_empty
 
+from codechecker_analyzer import analyzer_context
 from codechecker_analyzer.analyzers import clangsa
+from codechecker_analyzer.analyzers.analysis_config import AnalysisConfig
 
 from codechecker_common.logger import get_logger
 
@@ -899,8 +901,7 @@ def __skip_gcc(flag_iterator, _):
 def parse_options(compilation_db_entry,
                   compiler_info_file=None,
                   keep_gcc_include_fixed=False,
-                  keep_gcc_intrin=False,
-                  analyzer_clang_version=None):
+                  keep_gcc_intrin=False):
     """
     This function parses a GCC compilation action and returns a BuildAction
     object which can be the input of Clang analyzer tools.
@@ -920,8 +921,6 @@ def parse_options(compilation_db_entry,
                        kept among the implicit include paths. Use this flag if
                        Clang analysis fails with error message related to
                        __builtin symbols.
-    analyzer_clang_version -- version information about the clang which is
-                              used to execute the analysis
     """
     details = {
         'analyzer_options': [],
@@ -1008,6 +1007,14 @@ def parse_options(compilation_db_entry,
     if compiler_clang:
         # Based on the version information the compiler is clang.
         flag_processors = clang_flag_collectors
+
+        analyzer_clang_binary = \
+            analyzer_context.get_context().analyzer_binaries.get(
+                clangsa.analyzer.ClangSA.ANALYZER_NAME)
+
+        analyzer_clang_version = None
+        if analyzer_clang_binary:
+            analyzer_clang_version = clangsa.version.get(analyzer_clang_binary)
 
         if analyzer_clang_version and \
             compiler_clang.installed_dir == \
@@ -1118,14 +1125,14 @@ def process_response_file(response_file):
     return options, sources
 
 
-def extend_compilation_database_entries(compilation_database):
+def extend_compilation_database_entries(compile_commands):
     """
     Loop through the compilation database entries and whether compilation
     command contains a response file we read those files and replace the
     response file with the options from the file.
     """
     entries = []
-    for entry in compilation_database:
+    for entry in compile_commands:
         if 'command' in entry and '@' in entry['command']:
             cmd = []
             source_files = []
@@ -1178,16 +1185,9 @@ class CompileActionUniqueingType(Enum):
     STRICT = 3  # Gives error in case of duplicate
 
 
-def parse_unique_log(compilation_database,
-                     report_dir,
+def parse_unique_log(ac: AnalysisConfig,
                      compile_uniqueing="none",
-                     compiler_info_file=None,
-                     keep_gcc_include_fixed=False,
-                     keep_gcc_intrin=False,
-                     analysis_skip_handlers=None,
-                     pre_analysis_skip_handlers=None,
-                     ctu_or_stats_enabled=False,
-                     analyzer_clang_version=None):
+                     compiler_info_file=None):
     """
     This function reads up the compilation_database
     and returns with a list of build actions that is
@@ -1201,45 +1201,30 @@ def parse_unique_log(compilation_database,
     This function also dumps auto-detected the compiler info
     into <report_dir>/compiler_info.json.
 
-    compilation_database -- A compilation database as a list of dict objects.
-                            These object should contain "file", "dictionary"
-                            and "command" keys. The "command" may be replaced
-                            by "arguments" which is a split command. Older
-                            versions of intercept-build provide the build
-                            command this way.
-    report_dir  -- The output report directory. The compiler infos
-                   will be written to <report_dir>/compiler.info.json.
     compile_uniqueing -- Compilation database uniqueing mode.
                          If there are more than one compile commands for a
                          target file, only a single one is kept.
     compiler_info_file -- compiler_info.json. If exists, it will be used for
                     analysis.
-    keep_gcc_include_fixed -- There are some implicit include paths which are
-                              only used by GCC (include-fixed). This flag
-                              determines whether these should be kept among
-                              the implicit include paths.
-    keep_gcc_intrin -- There are some implicit include paths which contain
-                       GCC-specific header files (those which end with
-                       intrin.h). This flag determines whether these should be
-                       kept among the implicit include paths. Use this flag if
-                       Clang analysis fails with error message related to
-                       __builtin symbols.
-
-    Separate skip handlers are required because it is possible that different
-    files are skipped during pre analysis and the actual analysis. In the
-    pre analysis step nothing should be skipped to collect the required
-    information for the analysis step where not all the files are analyzed.
-
-    analysis_skip_handlers -- skip handlers for files which should be skipped
-                             during analysis
-    pre_analysis_skip_handlers -- skip handlers for files wich should be
-                                 skipped during pre analysis
-    ctu_or_stats_enabled -- ctu or statistics based analysis was enabled
-                            influences the behavior which files are skipped.
-    analyzer_clang_version -- version information about the clang which is
-                              used to execute the analysis
     """
     try:
+        ctu_collect = ac.plugin_options.get('ctu_collect')
+        ctu_analyze = ac.plugin_options.get('ctu_analyze')
+        stats_collect = ac.plugin_options.get('stats_collect')
+        stats_enabled = ac.plugin_options.get('stats_enabled')
+
+        ctu_or_stats_enabled = any([
+            ctu_collect, ctu_analyze, stats_collect, stats_enabled])
+
+        # Allow skipping the analysis of a translation unit if
+        #   1. There is no CTU and statistics based analysis or
+        #   2. There is CTU analysis but no need for collect phase or
+        #   3. There is no statistics collection.
+        allow_skip = \
+            not ctu_or_stats_enabled or \
+            ctu_collect and not ctu_analyze or \
+            stats_collect
+
         uniqued_build_actions = dict()
 
         if compile_uniqueing == "alpha":
@@ -1254,28 +1239,21 @@ def parse_unique_log(compilation_database,
 
         skipped_cmp_cmd_count = 0
 
-        for entry in extend_compilation_database_entries(compilation_database):
+        for entry in extend_compilation_database_entries(ac.compile_commands):
             # Normalization needs to be done here, because the skip regex
             # won't match properly in the skiplist handler.
             entry['file'] = os.path.normpath(
                 os.path.join(entry['directory'], entry['file']))
-            # Skip parsing the compilaton commands if it should be skipped
-            # at both analysis phases (pre analysis and analysis).
-            # Skipping of the compile commands is done differently if no
-            # CTU or statistics related feature was enabled.
-            if analysis_skip_handlers \
-                and analysis_skip_handlers.should_skip(entry['file']) \
-                and (not ctu_or_stats_enabled or pre_analysis_skip_handlers
-                     and pre_analysis_skip_handlers.should_skip(
-                         entry['file'])):
+
+            if ac.skip_handlers.should_skip(entry['file']) and allow_skip:
                 skipped_cmp_cmd_count += 1
                 continue
 
-            action = parse_options(entry,
-                                   compiler_info_file,
-                                   keep_gcc_include_fixed,
-                                   keep_gcc_intrin,
-                                   analyzer_clang_version)
+            action = parse_options(
+                entry,
+                compiler_info_file,
+                ac.plugin_options.get('gcc_keep_include_fixed'),
+                ac.plugin_options.get('gcc_keep_intrin'))
 
             if not action.lang:
                 continue
@@ -1322,13 +1300,13 @@ def parse_unique_log(compilation_database,
                     sys.exit(1)
 
         ImplicitCompilerInfo.dump_compiler_info(
-            os.path.join(report_dir, "compiler_info.json"))
+            os.path.join(ac.output_dir, 'compiler_info.json'))
 
         LOG.debug('Parsing log file done.')
         return list(uniqued_build_actions.values()), skipped_cmp_cmd_count
 
     except (ValueError, KeyError, TypeError) as ex:
-        if not compilation_database:
+        if not ac.compile_commands:
             LOG.error('The compile database is empty.')
         else:
             LOG.error('The compile database is not valid.')

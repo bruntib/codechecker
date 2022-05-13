@@ -14,6 +14,7 @@ Test the handling of implicitly and explicitly handled checkers in analyzers
 import unittest
 
 from codechecker_analyzer import analyzer_context
+from codechecker_analyzer.analyzers.analysis_config import AnalysisConfig
 from codechecker_analyzer.analyzers.clangsa.analyzer import ClangSA
 from codechecker_analyzer.analyzers.clangtidy.analyzer import ClangTidy
 from codechecker_analyzer.analyzers.config_handler import CheckerState
@@ -45,8 +46,7 @@ class MockCheckerLabels:
 
 
 def create_analyzer_sa():
-    args = []
-    cfg_handler = ClangSA.construct_config_handler(args)
+    cfg_handler = ClangSA.construct_config_handler(AnalysisConfig())
 
     action = {
         'file': 'main.cpp',
@@ -123,8 +123,6 @@ class CheckerHandlingClangSATest(unittest.TestCase):
                 return set(checkers) <= result
             return f
 
-        args = []
-
         # "security" profile, but alpha -> not in default.
         security_profile_alpha = [
                 'alpha.security.ArrayBound',
@@ -152,7 +150,7 @@ class CheckerHandlingClangSATest(unittest.TestCase):
 
         # "default" profile checkers are enabled explicitly. Others are in
         # "default" state.
-        cfg_handler = ClangSA.construct_config_handler(args)
+        cfg_handler = ClangSA.construct_config_handler(AnalysisConfig())
         cfg_handler.initialize_checkers(checkers)
         self.assertTrue(all_with_status(CheckerState.enabled)
                         (cfg_handler.checks(), default_profile))
@@ -161,7 +159,7 @@ class CheckerHandlingClangSATest(unittest.TestCase):
 
         # "--enable-all" leaves alpha checkers in "default" state. Others
         # become enabled.
-        cfg_handler = ClangSA.construct_config_handler(args)
+        cfg_handler = ClangSA.construct_config_handler(AnalysisConfig())
         cfg_handler.initialize_checkers(checkers, enable_all=True)
         self.assertTrue(all_with_status(CheckerState.default)
                         (cfg_handler.checks(), security_profile_alpha))
@@ -169,7 +167,7 @@ class CheckerHandlingClangSATest(unittest.TestCase):
                         (cfg_handler.checks(), default_profile))
 
         # Enable alpha checkers explicitly.
-        cfg_handler = ClangSA.construct_config_handler(args)
+        cfg_handler = ClangSA.construct_config_handler(AnalysisConfig())
         cfg_handler.initialize_checkers(checkers, [('alpha', True)])
         self.assertTrue(all_with_status(CheckerState.enabled)
                         (cfg_handler.checks(), security_profile_alpha))
@@ -177,7 +175,7 @@ class CheckerHandlingClangSATest(unittest.TestCase):
                         (cfg_handler.checks(), default_profile))
 
         # Enable "security" profile checkers.
-        cfg_handler = ClangSA.construct_config_handler(args)
+        cfg_handler = ClangSA.construct_config_handler(AnalysisConfig())
         cfg_handler.initialize_checkers(checkers,
                                         [('profile:security', True)])
         self.assertTrue(all_with_status(CheckerState.enabled)
@@ -186,7 +184,7 @@ class CheckerHandlingClangSATest(unittest.TestCase):
                         (cfg_handler.checks(), default_profile))
 
         # Enable "security" profile checkers without "profile:" prefix.
-        cfg_handler = ClangSA.construct_config_handler(args)
+        cfg_handler = ClangSA.construct_config_handler(AnalysisConfig())
         cfg_handler.initialize_checkers(checkers,
                                         [('security', True)])
         self.assertTrue(all_with_status(CheckerState.enabled)
@@ -195,35 +193,35 @@ class CheckerHandlingClangSATest(unittest.TestCase):
                         (cfg_handler.checks(), default_profile))
 
         # Enable "sei-cert" guideline checkers.
-        cfg_handler = ClangSA.construct_config_handler(args)
+        cfg_handler = ClangSA.construct_config_handler(AnalysisConfig())
         cfg_handler.initialize_checkers(checkers,
                                         [('guideline:sei-cert', True)])
         self.assertTrue(all_with_status(CheckerState.enabled)
                         (cfg_handler.checks(), cert_guideline))
 
         # Enable "sei-cert" guideline checkers.
-        cfg_handler = ClangSA.construct_config_handler(args)
+        cfg_handler = ClangSA.construct_config_handler(AnalysisConfig())
         cfg_handler.initialize_checkers(checkers,
                                         [('sei-cert', True)])
         self.assertTrue(all_with_status(CheckerState.enabled)
                         (cfg_handler.checks(), cert_guideline))
 
         # Disable "sei-cert" guideline checkers.
-        cfg_handler = ClangSA.construct_config_handler(args)
+        cfg_handler = ClangSA.construct_config_handler(AnalysisConfig())
         cfg_handler.initialize_checkers(checkers,
                                         [('guideline:sei-cert', False)])
         self.assertTrue(all_with_status(CheckerState.disabled)
                         (cfg_handler.checks(), cert_guideline))
 
         # Disable "sei-cert" guideline checkers.
-        cfg_handler = ClangSA.construct_config_handler(args)
+        cfg_handler = ClangSA.construct_config_handler(AnalysisConfig())
         cfg_handler.initialize_checkers(checkers,
                                         [('sei-cert', False)])
         self.assertTrue(all_with_status(CheckerState.disabled)
                         (cfg_handler.checks(), cert_guideline))
 
         # Enable "LOW" severity checkers.
-        cfg_handler = ClangSA.construct_config_handler(args)
+        cfg_handler = ClangSA.construct_config_handler(AnalysisConfig())
         cfg_handler.initialize_checkers(checkers,
                                         [('severity:LOW', True)])
         self.assertTrue(all_with_status(CheckerState.enabled)
@@ -231,8 +229,7 @@ class CheckerHandlingClangSATest(unittest.TestCase):
 
 
 def create_analyzer_tidy():
-    args = []
-    cfg_handler = ClangTidy.construct_config_handler(args)
+    cfg_handler = ClangTidy.construct_config_handler(AnalysisConfig())
 
     action = {
         'file': 'main.cpp',

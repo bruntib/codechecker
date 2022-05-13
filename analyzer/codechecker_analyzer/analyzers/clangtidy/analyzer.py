@@ -380,13 +380,12 @@ class ClangTidy(analyzer_base.SourceAnalyzer):
         return res_handler
 
     @classmethod
-    def construct_config_handler(cls, args):
+    def construct_config_handler(cls, analysis_config):
         context = analyzer_context.get_context()
         handler = config_handler.ClangTidyConfigHandler()
         handler.analyzer_binary = context.analyzer_binaries.get(
             cls.ANALYZER_NAME)
-        handler.report_hash = args.report_hash \
-            if 'report_hash' in args else None
+        handler.report_hash = analysis_config.report_hash_type
 
         # FIXME We cannot get the resource dir from the clang-tidy binary,
         # therefore we get a sibling clang binary which of clang-tidy.
@@ -396,7 +395,8 @@ class ClangTidy(analyzer_base.SourceAnalyzer):
         if os.path.isabs(handler.analyzer_binary):
             check_env['PATH'] = os.path.dirname(handler.analyzer_binary)
         try:
-            with open(args.tidy_args_cfg_file, 'r', encoding='utf-8',
+            tidyargs = analysis_config.plugin_options.get('tidy_args_cfg_file')
+            with open(tidyargs, 'r', encoding='utf-8',
                       errors='ignore') as tidy_cfg:
                 handler.analyzer_extra_arguments = \
                     re.sub(r'\$\((.*?)\)', env.replace_env_var,
@@ -405,21 +405,16 @@ class ClangTidy(analyzer_base.SourceAnalyzer):
                     shlex.split(handler.analyzer_extra_arguments)
         except IOError as ioerr:
             LOG.debug_analyzer(ioerr)
-        except AttributeError as aerr:
+        except TypeError as aerr:
             # No clang tidy arguments file was given in the command line.
             LOG.debug_analyzer(aerr)
 
         analyzer_config = {}
-        # TODO: This extra "isinstance" check is needed for
-        # CodeChecker analyzers --analyzer-config. This command also
-        # runs this function in order to construct a config handler.
-        if 'analyzer_config' in args and \
-                isinstance(args.analyzer_config, list):
-            r = re.compile(r'(?P<analyzer>.+?):(?P<key>.+?)=(?P<value>.+)')
-            for cfg in args.analyzer_config:
-                m = re.search(r, cfg)
-                if m.group('analyzer') == cls.ANALYZER_NAME:
-                    analyzer_config[m.group('key')] = m.group('value')
+        r = re.compile(r'(?P<analyzer>.+?):(?P<key>.+?)=(?P<value>.+)')
+        for cfg in analysis_config.analyzer_config:
+            m = re.search(r, cfg)
+            if m.group('analyzer') == cls.ANALYZER_NAME:
+                analyzer_config[m.group('key')] = m.group('value')
 
         # If both --analyzer-config and -config (in --tidyargs) is given then
         # these need to be merged. Since "HeaderFilterRegex" has a default
@@ -442,14 +437,14 @@ class ClangTidy(analyzer_base.SourceAnalyzer):
             del handler.analyzer_extra_arguments[i:i + arg_num]
             break
 
-        # TODO: This extra "isinstance" check is needed for
-        # CodeChecker checkers --checker-config. This command also
-        # runs this function in order to construct a config handler.
-        if 'checker_config' in args and isinstance(args.checker_config, list):
+        # TODO: Currently --checker-config and --tidy-config flags are used
+        # exclusively: --checker-config has priority over --tidy-config. These
+        # could be easily merged.
+        if analysis_config.checker_config:
             r = re.compile(r'(?P<analyzer>.+?):(?P<key>.+?)=(?P<value>.+)')
             check_options = []
 
-            for cfg in args.checker_config:
+            for cfg in analysis_config.checker_config:
                 m = re.search(r, cfg)
                 if m.group('analyzer') == cls.ANALYZER_NAME:
                     check_options.append({'key': m.group('key'),
@@ -457,12 +452,13 @@ class ClangTidy(analyzer_base.SourceAnalyzer):
             analyzer_config['CheckOptions'] = check_options
         else:
             try:
-                with open(args.tidy_config, 'r',
-                          encoding='utf-8', errors='ignore') as tidy_config:
+                with open(analysis_config.plugin_options.get('tidy_config'),
+                          'r', encoding='utf-8', errors='ignore') \
+                              as tidy_config:
                     handler.checker_config = tidy_config.read()
             except IOError as ioerr:
                 LOG.debug_analyzer(ioerr)
-            except AttributeError as aerr:
+            except TypeError as aerr:
                 # No clang tidy config file was given in the command line.
                 LOG.debug_analyzer(aerr)
 
@@ -478,7 +474,7 @@ class ClangTidy(analyzer_base.SourceAnalyzer):
         checkers = ClangTidy.get_analyzer_checkers(handler)
 
         try:
-            cmdline_checkers = args.ordered_checkers
+            cmdline_checkers = analysis_config.checker_enabling
         except AttributeError:
             LOG.debug_analyzer('No checkers were defined in '
                                'the command line for %s',
@@ -488,6 +484,6 @@ class ClangTidy(analyzer_base.SourceAnalyzer):
         handler.initialize_checkers(
             checkers,
             cmdline_checkers,
-            'enable_all' in args and args.enable_all)
+            analysis_config.enable_all)
 
         return handler

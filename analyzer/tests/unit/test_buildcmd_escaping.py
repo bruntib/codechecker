@@ -14,7 +14,7 @@ import shutil
 import tempfile
 import unittest
 
-from codechecker_analyzer.analyzers import analyzer_base
+from codechecker_analyzer.analyzers import analyzer_base, analysis_config
 from codechecker_analyzer.buildlog import build_manager
 from codechecker_analyzer.buildlog import log_parser
 
@@ -87,8 +87,11 @@ class BuildCmdTestNose(unittest.TestCase):
         compile_cmd = self.compiler + \
             ' -DDEBUG \'-DMYPATH="/this/some/path/"\''
 
-        comp_actions, _ = log_parser.\
-            parse_unique_log(self.__get_cmp_json(compile_cmd), self.tmp_dir)
+        ac = analysis_config.AnalysisConfig()
+        ac.compile_commands = self.__get_cmp_json(compile_cmd)
+        ac.output_dir = self.tmp_dir
+
+        comp_actions, _ = log_parser.parse_unique_log(ac)
 
         for comp_action in comp_actions:
             cmd = [self.compiler]
@@ -113,8 +116,12 @@ class BuildCmdTestNose(unittest.TestCase):
         If the escaping fails the source file will not compile.
         """
         compile_cmd = self.compiler + ''' '-DMYPATH=\"/some/other/path\"' '''
-        comp_actions, _ = log_parser.\
-            parse_unique_log(self.__get_cmp_json(compile_cmd), self.tmp_dir)
+
+        ac = analysis_config.AnalysisConfig()
+        ac.compile_commands = self.__get_cmp_json(compile_cmd)
+        ac.output_dir = self.tmp_dir
+
+        comp_actions, _ = log_parser.parse_unique_log(ac)
 
         for comp_action in comp_actions:
             cmd = [self.compiler]

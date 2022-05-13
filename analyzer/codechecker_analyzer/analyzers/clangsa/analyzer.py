@@ -21,6 +21,7 @@ from codechecker_common import util
 from codechecker_common.logger import get_logger
 
 from codechecker_analyzer import env, analyzer_context
+from codechecker_analyzer.analyzers.analysis_config import AnalysisConfig
 
 from .. import analyzer_base
 from ..config_handler import CheckerState
@@ -191,10 +192,11 @@ class ClangSA(analyzer_base.SourceAnalyzer):
     @classmethod
     def is_ctu_capable(cls):
         """ Detects if the current clang is CTU compatible. """
+        # TODO: AnalysisConfig shouldn't be needed in this function.
         if cls.check_analyzer_availability() is not True:
             return False
 
-        clangsa_cfg = cls.construct_config_handler([])
+        clangsa_cfg = cls.construct_config_handler(AnalysisConfig())
         return clangsa_cfg.ctu_capability.is_ctu_capable
 
     @classmethod
@@ -202,19 +204,21 @@ class ClangSA(analyzer_base.SourceAnalyzer):
         """
         Detects if the current clang is capable of on-demand AST loading.
         """
+        # TODO: AnalysisConfig shouldn't be needed in this function.
         if cls.check_analyzer_availability() is not True:
             return False
 
-        clangsa_cfg = cls.construct_config_handler([])
+        clangsa_cfg = cls.construct_config_handler(AnalysisConfig())
         return clangsa_cfg.ctu_capability.is_on_demand_ctu_available
 
     @classmethod
     def is_statistics_capable(cls):
         """ Detects if the current clang is Statistics compatible. """
+        # TODO: AnalysisConfig shouldn't be needed in this function.
         if cls.check_analyzer_availability() is not True:
             return False
 
-        clangsa_cfg = cls.construct_config_handler([])
+        clangsa_cfg = cls.construct_config_handler(AnalysisConfig())
 
         checkers = cls.get_analyzer_checkers(clangsa_cfg, True, True)
 
@@ -247,10 +251,10 @@ class ClangSA(analyzer_base.SourceAnalyzer):
         # config option exists i.e. it is visible on analyzer config option
         # help page. However, it doesn't mean that Clang itself is compiled
         # with Z3.
-        context = analyzer_context.get_context()
         if not cls.is_z3_capable():
             return False
 
+        context = analyzer_context.get_context()
         analyzer_binary = context.analyzer_binaries.get(cls.ANALYZER_NAME)
 
         return host_check.has_analyzer_config_option(
@@ -535,7 +539,7 @@ class ClangSA(analyzer_base.SourceAnalyzer):
         return res_handler
 
     @classmethod
-    def construct_config_handler(cls, args):
+    def construct_config_handler(cls, ac: AnalysisConfig):
         context = analyzer_context.get_context()
 
         handler = config_handler.ClangSAConfigHandler(context.analyzer_env)
@@ -544,41 +548,44 @@ class ClangSA(analyzer_base.SourceAnalyzer):
             cls.ANALYZER_NAME)
         handler.version_info = version.get(handler.analyzer_binary)
 
-        handler.report_hash = args.report_hash \
-            if 'report_hash' in args else None
+        handler.report_hash = ac.report_hash_type
 
-        handler.enable_z3 = 'enable_z3' in args and args.enable_z3 == 'on'
+        handler.enable_z3 = \
+            ac.plugin_options.get('enable_z3', False)
+        handler.enable_z3_refutation = \
+            ac.plugin_options.get('enable_z3_refutation', False)
 
-        handler.enable_z3_refutation = 'enable_z3_refutation' in args and \
-            args.enable_z3_refutation == 'on'
-
-        if 'ctu_phases' in args:
-            handler.ctu_dir = os.path.join(args.output_path,
-                                           args.ctu_dir)
+        # TODO: operator [] could be used instead of get() if is_ctu_capable()
+        # doesn't use a default constructed AnalysisConfig.
+        ctu_collect = ac.plugin_options.get('ctu_collect')
+        ctu_analyze = ac.plugin_options.get('ctu_analyze')
+        if ctu_collect or ctu_analyze:
+            handler.ctu_dir = os.path.join(ac.output_dir,
+                                           'ctu-dir')
             handler.ctu_on_demand = \
-                'ctu_ast_mode' in args and \
-                args.ctu_ast_mode == 'parse-on-demand'
-            handler.log_file = args.logfile
+                ac.plugin_options['ctu_ast_mode'] == \
+                'parse-on-demand'
 
         try:
-            with open(args.clangsa_args_cfg_file, 'r', encoding='utf8',
-                      errors='ignore') as sa_cfg:
+            saargs = ac.plugin_options.get('clangsa_args_cfg_file')
+            with open(saargs, 'r', encoding='utf8', errors='ignore') as sa_cfg:
                 handler.analyzer_extra_arguments = \
                     re.sub(r'\$\((.*?)\)',
-                           env.replace_env_var(args.clangsa_args_cfg_file),
+                           env.replace_env_var(saargs),
                            sa_cfg.read().strip())
                 handler.analyzer_extra_arguments = \
                     shlex.split(handler.analyzer_extra_arguments)
         except IOError as ioerr:
             LOG.debug_analyzer(ioerr)
-        except AttributeError as aerr:
+        except TypeError as aerr:
             # No clangsa arguments file was given in the command line.
             LOG.debug_analyzer(aerr)
 
         checkers = ClangSA.get_analyzer_checkers(handler)
 
         try:
-            cmdline_checkers = args.ordered_checkers
+            # TODO: This will never throw an exception.
+            cmdline_checkers = ac.checker_enabling
         except AttributeError:
             LOG.debug_analyzer('No checkers were defined in '
                                'the command line for %s', cls.ANALYZER_NAME)
@@ -587,30 +594,21 @@ class ClangSA(analyzer_base.SourceAnalyzer):
         handler.initialize_checkers(
             checkers,
             cmdline_checkers,
-            'enable_all' in args and args.enable_all)
+            ac.enable_all)
 
         handler.checker_config = []
         r = re.compile(r'(?P<analyzer>.+?):(?P<key>.+?)=(?P<value>.+)')
 
-        # TODO: This extra "isinstance" check is needed for
-        # CodeChecker checkers --checker-config. This command also runs
-        # this function in order to construct a config handler.
-        if 'checker_config' in args and isinstance(args.checker_config, list):
-            for cfg in args.checker_config:
-                m = re.search(r, cfg)
-                if m.group('analyzer') == cls.ANALYZER_NAME:
-                    handler.checker_config.append(
-                        m.group('key') + '=' + m.group('value'))
+        for cfg in ac.checker_config:
+            m = re.search(r, cfg)
+            if m.group('analyzer') == cls.ANALYZER_NAME:
+                handler.checker_config.append(
+                    m.group('key') + '=' + m.group('value'))
 
-        # TODO: This extra "isinstance" check is needed for
-        # CodeChecker analyzers --analyzer-config. This command also runs
-        # this function in order to construct a config handler.
-        if 'analyzer_config' in args and \
-                isinstance(args.analyzer_config, list):
-            for cfg in args.analyzer_config:
-                m = re.search(r, cfg)
-                if m.group('analyzer') == cls.ANALYZER_NAME:
-                    handler.checker_config.append(
-                        m.group('key') + '=' + m.group('value'))
+        for cfg in ac.analyzer_config:
+            m = re.search(r, cfg)
+            if m.group('analyzer') == cls.ANALYZER_NAME:
+                handler.checker_config.append(
+                    m.group('key') + '=' + m.group('value'))
 
         return handler

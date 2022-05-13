@@ -22,6 +22,7 @@ from codechecker_report_converter import twodim
 
 from codechecker_analyzer import analyzer_context
 from codechecker_analyzer.analyzers import analyzer_types
+from codechecker_analyzer.analyzers.analysis_config import AnalysisConfig
 from codechecker_analyzer.analyzers.clangsa.analyzer import ClangSA
 from codechecker_analyzer.analyzers.clangtidy.analyzer import ClangTidy
 
@@ -320,7 +321,7 @@ def __get_detailed_checker_info(
         analyzer_types.supported_analyzers)
 
     analyzer_config_map = analyzer_types.build_config_handlers(
-        args, working_analyzers)
+        AnalysisConfig(), working_analyzers)
 
     analyzer_environment = context.analyzer_env
 
@@ -642,7 +643,7 @@ def __print_checker_config(args: argparse.Namespace):
     analyzer_types.check_available_analyzers(working_analyzers, errored)
 
     analyzer_config_map = analyzer_types.build_config_handlers(
-        args, working_analyzers)
+        AnalysisConfig(), working_analyzers)
 
     if 'details' in args:
         header = ['Option', 'Description']

@@ -473,7 +473,7 @@ is called.""")
         ctu_opts.add_argument('--ctu-reanalyze-on-failure',
                               action='store_true',
                               dest='ctu_reanalyze_on_failure',
-                              default=argparse.SUPPRESS,
+                              default=False,
                               help="DEPRECATED. The flag will be removed. "
                                    "If Cross-TU analysis is enabled and "
                                    "fails for some reason, try to re analyze "

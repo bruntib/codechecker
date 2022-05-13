@@ -27,6 +27,7 @@ from codechecker_statistics_collector.collectors.return_value import \
 from . import analysis_manager, analyzer_context, pre_analysis_manager, \
     checkers
 from .analyzers import analyzer_types
+from .analyzers.analysis_config import AnalysisConfig
 from .analyzers.config_handler import CheckerState
 from .analyzers.clangsa.analyzer import ClangSA
 
@@ -78,34 +79,36 @@ def __mgr_init():
     signal.signal(signal.SIGINT, signal.SIG_IGN)
 
 
-def __get_statistics_data(args):
+def __get_statistics_data(ac: AnalysisConfig):
     """ Get statistics data. """
     statistics_data = None
 
-    if 'stats_enabled' in args and args.stats_enabled:
+    if ac.plugin_options['stats_enabled']:
         statistics_data = {
-            'stats_out_dir': os.path.join(args.output_path, "stats")}
+            'stats_out_dir': os.path.join(ac.output_dir, "stats")}
 
-    if 'stats_collect' in args and args.stats_collect:
-        statistics_data = {'stats_out_dir': args.stats_collect}
+    stats_collect = ac.plugin_options['stats_collect']
+    if stats_collect:
+        statistics_data = {'stats_out_dir': stats_collect}
 
     if statistics_data:
         statistics_data['stat_tmp_dir'] = \
             os.path.join(statistics_data.get('stats_out_dir'), 'tmp')
 
-    if 'stats_min_sample_count' in args and statistics_data:
-        if args.stats_min_sample_count > 1:
-            statistics_data['stats_min_sample_count'] =\
-                args.stats_min_sample_count
+    if statistics_data:
+        stats_min_sample_count = ac.config_options['stats_min_sample_count']
+        if stats_min_sample_count > 1:
+            statistics_data['stats_min_sample_count'] = stats_min_sample_count
         else:
-            LOG.error("stats_min_sample_count"
-                      "must be greater than 1.")
+            LOG.error("stats_min_sample_count must be greater than 1.")
             return None
 
-    if 'stats_relevance_threshold' in args and statistics_data:
-        if 1 > args.stats_relevance_threshold > 0:
-            statistics_data['stats_relevance_threshold'] =\
-                args.stats_relevance_threshold
+    if statistics_data:
+        stats_relevance_threshold = \
+            ac.config_options['stats_relevance_threshold']
+        if 1 > stats_relevance_threshold > 0:
+            statistics_data['stats_relevance_threshold'] = \
+                stats_relevance_threshold
         else:
             LOG.error("stats-relevance-threshold must be"
                       " greater than 0 and smaller than 1.")
@@ -123,8 +126,10 @@ def __get_ctu_data(config_map, ctu_dir):
             'ctu_temp_fnmap_folder': 'tmpExternalFnMaps'}
 
 
-def perform_analysis(args, skip_handlers, actions, metadata_tool,
-                     compile_cmd_count):
+def perform_analysis(
+    ac: AnalysisConfig, analyzers, makefile, actions, metadata_tool,
+    compile_cmd_count
+):
     """
     Perform static analysis via the given (or if not, all) analyzers,
     in the given analysis context for the supplied build actions.
@@ -133,38 +138,30 @@ def perform_analysis(args, skip_handlers, actions, metadata_tool,
 
     context = analyzer_context.get_context()
 
-    ctu_reanalyze_on_failure = 'ctu_reanalyze_on_failure' in args and \
-        args.ctu_reanalyze_on_failure
-    if ctu_reanalyze_on_failure:
-        LOG.warning("Usage of a DEPRECATED FLAG!\n"
-                    "The --ctu-reanalyze-on-failure flag will be removed "
-                    "in the upcoming releases!")
-
-    analyzers = args.analyzers if 'analyzers' in args \
-        else analyzer_types.supported_analyzers
+    analyzers = analyzers or analyzer_types.supported_analyzers
     analyzers, errored = analyzer_types.check_supported_analyzers(analyzers)
     analyzer_types.check_available_analyzers(analyzers, errored)
 
-    ctu_collect = False
-    ctu_analyze = False
+    ctu_collect = ac.plugin_options['ctu_collect']
+    ctu_analyze = ac.plugin_options['ctu_analyze']
+    stats_collect = ac.plugin_options['stats_collect']
+    stats_enabled = ac.plugin_options['stats_enabled']
+
     ctu_dir = ''
-    if 'ctu_phases' in args:
-        ctu_dir = os.path.join(args.output_path, 'ctu-dir')
-        args.ctu_dir = ctu_dir
+    if ctu_collect or ctu_analyze:
+        ctu_dir = os.path.join(ac.output_dir, 'ctu-dir')
         if ClangSA.ANALYZER_NAME not in analyzers:
             LOG.error("CTU can only be used with the clang static analyzer.")
             return
-        ctu_collect = args.ctu_phases[0]
-        ctu_analyze = args.ctu_phases[1]
 
-    if 'stats_enabled' in args and args.stats_enabled:
+    if stats_enabled:
         if ClangSA.ANALYZER_NAME not in analyzers:
             LOG.debug("Statistics can only be used with "
                       "the Clang Static Analyzer.")
             return
 
     actions = prepare_actions(actions, analyzers)
-    config_map = analyzer_types.build_config_handlers(args, analyzers)
+    config_map = analyzer_types.build_config_handlers(ac, analyzers)
 
     available_checkers = set()
     # Add profile names to the checkers list so we will not warn
@@ -180,17 +177,16 @@ def perform_analysis(args, skip_handlers, actions, metadata_tool,
             checker_name, _ = analyzer_checker
             available_checkers.add(checker_name)
 
-    if 'ordered_checkers' in args:
-        missing_checkers = checkers.available(args.ordered_checkers,
-                                              available_checkers)
-        if missing_checkers:
-            LOG.warning("No checker(s) with these names was found:\n%s",
-                        '\n'.join(missing_checkers))
-            LOG.warning("Please review the checker names.\n"
-                        "In the next release the analysis will not start "
-                        "with invalid checker names.")
+    missing_checkers = checkers.available(
+        ac.checker_enabling, available_checkers)
+    if missing_checkers:
+        LOG.warning("No checker(s) with these names was found:\n%s",
+                    '\n'.join(missing_checkers))
+        LOG.warning("Please review the checker names.\n"
+                    "In the next release the analysis will not start "
+                    "with invalid checker names.")
 
-    if 'stats_enabled' in args:
+    if ac.plugin_options['stats_enabled']:
         config_map[ClangSA.ANALYZER_NAME].set_checker_enabled(
             SpecialReturnValueCollector.checker_analyze)
 
@@ -234,17 +230,17 @@ def perform_analysis(args, skip_handlers, actions, metadata_tool,
     LOG.info("Enabled checkers:\n%s", '\n'.join(
         k + ': ' + ', '.join(v) for k, v in enabled_checkers.items()))
 
-    if 'makefile' in args and args.makefile:
-        statistics_data = __get_statistics_data(args)
+    if makefile:
+        statistics_data = __get_statistics_data(ac)
 
         ctu_data = None
         if ctu_collect or statistics_data:
             ctu_data = __get_ctu_data(config_map, ctu_dir)
 
-        makefile_creator = MakeFileCreator(analyzers, args.output_path,
-                                           config_map, skip_handlers,
-                                           ctu_collect, statistics_data,
-                                           ctu_data)
+        makefile_creator = MakeFileCreator(
+            analyzers, ac.output_dir, config_map,
+            ac.skip_handlers, ctu_collect, statistics_data,
+            ctu_data)
         makefile_creator.create(actions)
         return
 
@@ -265,7 +261,7 @@ def perform_analysis(args, skip_handlers, actions, metadata_tool,
     actions_map = create_actions_map(actions, manager)
 
     # Setting to not None value will enable statistical analysis features.
-    statistics_data = __get_statistics_data(args)
+    statistics_data = __get_statistics_data(ac)
     if statistics_data:
         statistics_data = manager.dict(statistics_data)
 
@@ -280,16 +276,15 @@ def perform_analysis(args, skip_handlers, actions, metadata_tool,
 
         # Skip list is applied only in pre-analysis
         # if --ctu-collect or --stats-collect  was called explicitly
-        if ((ctu_collect and not ctu_analyze)
-                or ("stats_collect" in args and args.stats_collect)):
-            pre_anal_skip_handlers = skip_handlers
+        if ((ctu_collect and not ctu_analyze) or stats_collect):
+            pre_anal_skip_handlers = ac.skip_handlers
 
         clangsa_config = config_map.get(ClangSA.ANALYZER_NAME)
 
         if clangsa_config is not None:
             pre_analysis_manager.run_pre_analysis(pre_analyze,
                                                   clangsa_config,
-                                                  args.jobs,
+                                                  ac.jobs,
                                                   pre_anal_skip_handlers,
                                                   ctu_data,
                                                   statistics_data,
@@ -298,26 +293,20 @@ def perform_analysis(args, skip_handlers, actions, metadata_tool,
             LOG.error("Can not run pre analysis without clang "
                       "static analyzer configuration.")
 
-    if 'stats_collect' in args and args.stats_collect:
+    if stats_collect:
         return
 
-    if 'stats_dir' in args and args.stats_dir:
-        statistics_data = manager.dict({'stats_out_dir': args.stats_dir})
+    stats_dir = ac.plugin_options.get('stats_dir')
+    if stats_dir:
+        statistics_data = manager.dict({'stats_out_dir': stats_dir})
 
     if ctu_analyze or statistics_data or (not ctu_analyze and not ctu_collect):
 
         LOG.info("Starting static analysis ...")
-        analysis_manager.start_workers(actions_map, actions,
-                                       config_map, args.jobs,
-                                       args.output_path,
-                                       skip_handlers,
+        analysis_manager.start_workers(ac,
+                                       actions_map, actions,
+                                       config_map,
                                        metadata_tool,
-                                       'quiet' in args,
-                                       'capture_analysis_output' in args,
-                                       'generate_reproducer' in args,
-                                       args.timeout if 'timeout' in args
-                                       else None,
-                                       ctu_reanalyze_on_failure,
                                        statistics_data,
                                        manager,
                                        compile_cmd_count)

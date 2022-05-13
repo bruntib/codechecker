@@ -26,6 +26,7 @@ from tu_collector import tu_collector
 
 from codechecker_analyzer import analyzer, analyzer_context
 from codechecker_analyzer.analyzers import analyzer_types, clangsa
+from codechecker_analyzer.analyzers.analysis_config import AnalysisConfig
 from codechecker_analyzer.arg import \
         OrderedCheckersAction, OrderedConfigAction
 from codechecker_analyzer.buildlog import log_parser
@@ -201,7 +202,6 @@ def add_arguments_to_parser(parser):
     parser.add_argument('--compiler-info-file',
                         dest="compiler_info_file",
                         required=False,
-                        default=argparse.SUPPRESS,
                         help="Read the compiler includes and target from the "
                              "specified file rather than invoke the compiler "
                              "executable.")
@@ -525,7 +525,7 @@ Cross-TU analysis. By default, no CTU analysis is run when
         ctu_opts.add_argument('--ctu-reanalyze-on-failure',
                               action='store_true',
                               dest='ctu_reanalyze_on_failure',
-                              default=argparse.SUPPRESS,
+                              default=False,
                               help="DEPRECATED. The flag will be removed. "
                                    "If Cross-TU analysis is enabled and fails "
                                    "for some reason, try to re analyze the "
@@ -792,7 +792,9 @@ def __get_skip_handlers(args, compile_commands) -> SkipListHandlers:
 
 def __update_skip_file(args):
     """
-    Remove previous skip file if there was any.
+    Remove previous skip file if there was any and copy the current one given
+    in command line arguments. This way the output directory contains the skip
+    file that was applied during analysis.
     """
     skip_file_to_send = os.path.join(args.output_path, 'skip_file')
 
@@ -851,17 +853,72 @@ def __get_result_source_files(metadata):
     return result_src_files
 
 
-def main(args):
+def __transform_args(args):
     """
-    Perform analysis on the given logfiles and store the results in a machine-
-    readable format.
+    This function performs some transformation in certain command-line
+    arguments (convert paths to absolute, etc.)
     """
-    logger.setup_logger(args.verbose if 'verbose' in args else None)
 
-    # CTU loading mode is only meaningful if CTU itself is enabled.
-    if 'ctu_ast_mode' in args and 'ctu_phases' not in args:
+    args.output_path = os.path.abspath(args.output_path)
+
+    if args.compile_uniqueing == 'none' and 'ctu_phases' in args:
+        args.compile_uniqueing = 'alpha'
+
+    # TODO: This could be the default value of this flag, but this default
+    # value shouldn't be displayed in the help message.
+    if 'ctu_phases' not in args:
+        args.ctu_phases = [False, False]
+
+    # When "CodeChecker check -b ..." is run then there is no compiler
+    # database.
+    if 'compiler_info_file' not in args:
+        args.compiler_info_file = None
+
+
+def __check_args(args):
+    """
+    This function checks the consistency of command-line arguments. For example
+    the usage of CTU-related flags is meaningless if ClangSA analyzer is not
+    turned on. In case of inconsistency an error message is printed and
+    execution is terminated with sys.exit(1).
+    """
+
+    if 'ctu_ast_mode' in args and args.ctu_phases == [False, False]:
         LOG.error("Analyzer option 'ctu-ast-mode' requires CTU mode enabled")
         sys.exit(1)
+
+    if not os.path.exists(args.logfile):
+        LOG.error("The specified logfile '%s' does not exist!", args.logfile)
+        sys.exit(1)
+
+    if os.path.exists(args.output_path) and \
+            not os.path.isdir(args.output_path):
+        LOG.error(
+            "The given output path is not a directory: %s",
+            args.output_path)
+        sys.exit(1)
+
+    config_option_re = re.compile(r'^({}):.+=.+$'.format(
+        '|'.join(analyzer_types.supported_analyzers)))
+
+    if 'analyzer_config' in args:
+        for config in args.analyzer_config:
+            if not re.match(config_option_re, config):
+                LOG.error("Analyzer option in wrong format: %s", config)
+                sys.exit(1)
+
+    if 'checker_config' in args:
+        for config in args.checker_config:
+            if not re.match(config_option_re, config):
+                LOG.error("Checker option in wrong format: %s", config)
+                sys.exit(1)
+
+    if args.compiler_info_file:
+        LOG.debug("Compiler info is read from: %s", args.compiler_info_file)
+        if not os.path.exists(args.compiler_info_file):
+            LOG.error("Compiler info file %s does not exist",
+                      args.compiler_info_file)
+            sys.exit(1)
 
     try:
         cmd_config.check_config_file(args)
@@ -869,128 +926,147 @@ def main(args):
         LOG.error(fnerr)
         sys.exit(1)
 
-    if not os.path.exists(args.logfile):
-        LOG.error("The specified logfile '%s' does not exist!", args.logfile)
-        sys.exit(1)
 
-    args.output_path = os.path.abspath(args.output_path)
-    if os.path.exists(args.output_path) and \
-            not os.path.isdir(args.output_path):
-        LOG.error("The given output path is not a directory: " +
-                  args.output_path)
-        sys.exit(1)
+def __create_analysis_config(args) -> AnalysisConfig:
+    analysis_config = AnalysisConfig()
+
+    analysis_config.compilation_databases = [args.logfile]
+    analysis_config.skip_handlers = \
+        __get_skip_handlers(args, analysis_config.compile_commands)
+
+    if 'ctu_phases' in args:
+        analysis_config.plugin_options['ctu_collect'] = args.ctu_phases[0]
+        analysis_config.plugin_options['ctu_analyze'] = args.ctu_phases[1]
+    else:
+        analysis_config.plugin_options['ctu_collect'] = False
+        analysis_config.plugin_options['ctu_analyze'] = False
+
+    analysis_config.plugin_options['stats_collect'] = \
+        'stats_collect' in args and args.stats_collect
+    analysis_config.plugin_options['stats_enabled'] = \
+        'stats_enabled' in args and args.stats_enabled
+
+    if clangsa.analyzer.ClangSA.is_statistics_capable():
+        analysis_config.plugin_options['stats_min_sample_count'] = \
+            args.stats_min_sample_count
+        analysis_config.plugin_options['stats_relevance_threshold'] = \
+            args.stats_relevance_threshold
+        analysis_config.plugin_options['stats_dir'] = \
+            args.stats_dir
+
+    analysis_config.plugin_options['keep_gcc_include_fixed'] = \
+        args.keep_gcc_include_fixed
+    analysis_config.plugin_options['keep_gcc_intrin'] = \
+        args.keep_gcc_intrin
+
+    analysis_config.plugin_options['ctu_reanalyze_on_failure'] = \
+        args.ctu_reanalyze_on_failure
+    analysis_config.plugin_options['ctu_ast_mode'] = \
+        args.ctu_ast_mode if 'ctu_ast_mode' in args else 'parse-on-demand'
+
+    analysis_config.plugin_options['enable_z3'] = \
+        'enable_z3' in args and args.enable_z3 == 'on'
+    analysis_config.plugin_options['enable_z3_refutation'] = \
+        'enable_z3_refitatopm' in args and args.enable_z3_refutation == 'on'
+
+    # TODO: Their content should be stored in analysis_config.verbatim instead.
+    analysis_config.plugin_options['tidy_args_cfg_file'] = \
+        args.tidy_args_cfg_file if 'tidy_args_cfg_file' in args else None
+    analysis_config.plugin_options['clangsa_args_cfg_file'] = \
+        args.clangsa_args_cfg_file if 'clangsa_args_cfg_file' in args else None
+
+    analysis_config.plugin_options['tidy_config'] = \
+        args.tidy_config if 'tidy_config' in args else None
+
+    analysis_config.output_dir = args.output_path
+
+    analysis_config.jobs = args.jobs
+
+    analysis_config.quiet = 'quiet' in args and args.quiet
+
+    analysis_config.capture_analysis_output = \
+        'capture_analysis_output' in args and args.capture_analysis_output
+
+    analysis_config.generate_reproducer = \
+        'generate_reproducer' in args and args.generate_reproducer
+
+    analysis_config.timeout = 0 if 'timeout' not in args else args.timeout
+
+    analysis_config.report_hash_type = \
+        args.report_hash if 'report_hash' in args else None
+
+    analysis_config.checker_enabling = \
+        args.ordered_checkers if 'ordered_checkers' in args else []
+
+    analysis_config.analyzer_config = \
+        args.analyzer_config if 'analyzer_config' in args else []
+    analysis_config.checker_config = \
+        args.checker_config if 'checker_config' in args else []
+
+    analysis_config.enable_all = \
+        args.enable_all if 'enable_all' in args else False
+
+    return analysis_config
+
+
+def main(args):
+    """
+    Perform analysis on the given logfiles and store the results in a machine-
+    readable format.
+    """
+    # TODO: At several places we check if 'something' in args even if argparse
+    # ensures that 'something' is a member in the Namespace. The reason if this
+    # check is that some test codes are passing empty Namespace objects to this
+    # main() function.
+    logger.setup_logger(args.verbose if 'verbose' in args else None)
+
+    __transform_args(args)
+    __check_args(args)
+
+    analysis_config = __create_analysis_config(args)
 
     if 'enable_all' in args:
         LOG.info("'--enable-all' was supplied for this analysis.")
 
-    config_option_re = re.compile(r'^({}):.+=.+$'.format(
-        '|'.join(analyzer_types.supported_analyzers)))
-
-    # Check the format of analyzer options.
-    if 'analyzer_config' in args:
-        for config in args.analyzer_config:
-            if not re.match(config_option_re, config):
-                LOG.error("Analyzer option in wrong format: %s", config)
-                sys.exit(1)
-
-    # Check the format of checker options.
-    if 'checker_config' in args:
-        for config in args.checker_config:
-            if not re.match(config_option_re, config):
-                LOG.error("Checker option in wrong format: %s", config)
-                sys.exit(1)
-
-    # Enable alpha uniqueing by default if ctu analysis is used.
-    if 'none' in args.compile_uniqueing and 'ctu_phases' in args:
-        args.compile_uniqueing = "alpha"
-
-    compiler_info_file = None
-    if 'compiler_info_file' in args:
-        LOG.debug("Compiler info is read from: %s", args.compiler_info_file)
-        if not os.path.exists(args.compiler_info_file):
-            LOG.error("Compiler info file %s does not exist",
-                      args.compiler_info_file)
-            sys.exit(1)
-        compiler_info_file = args.compiler_info_file
-
-    compile_commands = load_json_or_empty(args.logfile)
-    if compile_commands is None:
-        sys.exit(1)
-
-    # Process the skip list if present.
-    skip_handlers = __get_skip_handlers(args, compile_commands)
-
-    ctu_or_stats_enabled = False
-    # Skip list is applied only in pre-analysis
-    # if --ctu-collect was called explicitly.
-    pre_analysis_skip_handlers = None
-    if 'ctu_phases' in args:
-        ctu_collect = args.ctu_phases[0]
-        ctu_analyze = args.ctu_phases[1]
-        if ctu_collect and not ctu_analyze:
-            pre_analysis_skip_handlers = skip_handlers
-
-        if ctu_collect or ctu_analyze:
-            ctu_or_stats_enabled = True
-
-    # Skip list is applied only in pre-analysis
-    # if --stats-collect was called explicitly.
-    if 'stats_collect' in args and args.stats_collect:
-        pre_analysis_skip_handlers = skip_handlers
-        ctu_or_stats_enabled = True
-
-    if 'stats_enabled' in args and args.stats_enabled:
-        ctu_or_stats_enabled = True
+    if args.ctu_reanalyze_on_failure:
+        LOG.warning("Usage of a DEPRECATED FLAG!\n"
+                    "The --ctu-reanalyze-on-failure flag will be removed "
+                    "in the upcoming releases!")
 
     context = analyzer_context.get_context()
 
     # Number of all the compilation commands in the parsed log files,
     # logged by the logger.
-    all_cmp_cmd_count = len(compile_commands)
+    all_cmp_cmd_count = len(analysis_config.compile_commands)
 
     # We clear the output directory in the following cases.
-    ctu_dir = os.path.join(args.output_path, 'ctu-dir')
-    if 'ctu_phases' in args and args.ctu_phases[0] and \
+    ctu_dir = os.path.join(analysis_config.output_dir, 'ctu-dir')
+    if analysis_config.plugin_options['ctu_collect'] and \
             os.path.isdir(ctu_dir):
         # Clear the CTU-dir if the user turned on the collection phase.
         LOG.debug("Previous CTU contents have been deleted.")
         shutil.rmtree(ctu_dir)
 
-    if 'clean' in args and os.path.isdir(args.output_path):
+    if 'clean' in args and os.path.isdir(analysis_config.output_dir):
         LOG.info("Previous analysis results in '%s' have been removed, "
-                 "overwriting with current result", args.output_path)
-        shutil.rmtree(args.output_path)
+                 "overwriting with current result", analysis_config.output_dir)
+        shutil.rmtree(analysis_config.output_dir)
 
-    if not os.path.exists(args.output_path):
-        os.makedirs(args.output_path)
+    if not os.path.exists(analysis_config.output_dir):
+        os.makedirs(analysis_config.output_dir)
 
     # TODO: I'm not sure that this directory should be created here.
-    fixit_dir = os.path.join(args.output_path, 'fixit')
+    fixit_dir = os.path.join(analysis_config.output_dir, 'fixit')
     if not os.path.exists(fixit_dir):
         os.makedirs(fixit_dir)
 
     LOG.debug("args: %s", str(args))
-    LOG.debug("Output will be stored to: '%s'", args.output_path)
-
-    analyzer_clang_binary = \
-        context.analyzer_binaries.get(
-            clangsa.analyzer.ClangSA.ANALYZER_NAME)
-
-    analyzer_clang_version = None
-    if analyzer_clang_binary:
-        analyzer_clang_version = clangsa.version.get(analyzer_clang_binary)
+    LOG.debug("Output will be stored to: '%s'", analysis_config.output_dir)
 
     actions, skipped_cmp_cmd_count = log_parser.parse_unique_log(
-        compile_commands,
-        args.output_path,
+        analysis_config,
         args.compile_uniqueing,
-        compiler_info_file,
-        args.keep_gcc_include_fixed,
-        args.keep_gcc_intrin,
-        skip_handlers,
-        pre_analysis_skip_handlers,
-        ctu_or_stats_enabled,
-        analyzer_clang_version)
+        args.compiler_info_file)
 
     if not actions:
         LOG.info("No analysis is required.\nThere were no compilation "
@@ -999,7 +1075,7 @@ def main(args):
         sys.exit(0)
 
     uniqued_compilation_db_file = os.path.join(
-        args.output_path, "unique_compile_commands.json")
+        analysis_config.output_dir, "unique_compile_commands.json")
     with open(uniqued_compilation_db_file, 'w',
               encoding="utf-8", errors="ignore") as f:
         json.dump(actions, f,
@@ -1014,7 +1090,7 @@ def main(args):
             'version': "{0} ({1})".format(context.package_git_tag,
                                           context.package_git_hash),
             'working_directory': os.getcwd(),
-            'output_path': args.output_path,
+            'output_path': analysis_config.output_dir,
             'result_source_files': {},
             'analyzers': {}
         }]}
@@ -1024,7 +1100,7 @@ def main(args):
         metadata_tool['run_name'] = args.name
 
     # Update metadata dictionary with old values.
-    metadata_file = os.path.join(args.output_path, 'metadata.json')
+    metadata_file = os.path.join(analysis_config.output_dir, 'metadata.json')
     metadata_prev = None
     if os.path.exists(metadata_file):
         metadata_prev = load_json_or_empty(metadata_file)
@@ -1056,8 +1132,11 @@ def main(args):
     LOG.debug_analyzer("Compile commands forwarded for analysis: %d",
                        compile_cmd_count.analyze)
 
-    analyzer.perform_analysis(args, skip_handlers, actions, metadata_tool,
-                              compile_cmd_count)
+    analyzer.perform_analysis(
+        analysis_config,
+        args.analyzers if 'analyzers' in args else None,
+        'makefile' in args and args.makefile,
+        actions, metadata_tool, compile_cmd_count)
 
     __update_skip_file(args)
 
@@ -1071,7 +1150,8 @@ def main(args):
         json.dump(metadata, metafile)
 
     # WARN: store command will search for this file!!!!
-    compile_cmd_json = os.path.join(args.output_path, 'compile_cmd.json')
+    compile_cmd_json = os.path.join(
+        analysis_config.output_dir, 'compile_cmd.json')
     try:
         source = os.path.abspath(args.logfile)
         target = os.path.abspath(compile_cmd_json)

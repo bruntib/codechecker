@@ -93,7 +93,7 @@ def construct_analyzer(buildaction,
         return None
 
 
-def build_config_handlers(args, enabled_analyzers):
+def build_config_handlers(analysis_config, enabled_analyzers):
     """
     Handle config from command line or from config file if no command line
     config is given.
@@ -106,7 +106,7 @@ def build_config_handlers(args, enabled_analyzers):
 
     for ea in enabled_analyzers:
         config_handler = supported_analyzers[ea].\
-            construct_config_handler(args)
+            construct_config_handler(analysis_config)
         analyzer_config_map[ea] = config_handler
 
     return analyzer_config_map

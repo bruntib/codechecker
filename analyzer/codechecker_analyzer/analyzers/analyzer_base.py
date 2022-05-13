@@ -55,7 +55,7 @@ class SourceAnalyzer(metaclass=ABCMeta):
         raise NotImplementedError("Subclasses should implement this!")
 
     @classmethod
-    def construct_config_handler(cls, args):
+    def construct_config_handler(cls, analysis_config):
         """ Should return a subclass of AnalyzerConfigHandler."""
         raise NotImplementedError("Subclasses should implement this!")
 

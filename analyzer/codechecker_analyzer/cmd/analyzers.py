@@ -19,6 +19,7 @@ from codechecker_report_converter import twodim
 
 from codechecker_analyzer import analyzer_context
 from codechecker_analyzer.analyzers import analyzer_types
+from codechecker_analyzer.analyzers.analysis_config import AnalysisConfig
 
 from codechecker_common import logger
 from codechecker_common.output import USER_FORMATS
@@ -146,7 +147,7 @@ def main(args):
         return
 
     analyzer_config_map = analyzer_types.build_config_handlers(
-        args, working_analyzers)
+        AnalysisConfig(), working_analyzers)
 
     def uglify(text):
         """
