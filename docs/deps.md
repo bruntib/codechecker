@@ -20,7 +20,7 @@ Javascript dependencies are automatically downloaded based on the ext_source_dep
   * [SQLAlchemy](http://www.sqlalchemy.org/) (>= 1.0.9) Python SQL toolkit and Object Relational Mapper, for supporting multiple database backends
       * [PyPi SQLAlchemy](https://pypi.python.org/pypi/SQLAlchemy) (> 1.0.2)
   * Thrift python modules. Cross-language service building framework to handle data transfer for report storage and result viewer clients
-      * [PyPi thrift](https://pypi.python.org/pypi/thrift/0.11.0)(> 0.11.0 )
+      * [PyPi thrift](https://pypi.python.org/pypi/thrift/0.16.0)(> 0.16.0)
   * [Codemirror](https://codemirror.net/) (MIT) - view source code in the browser
   * [Jsplumb](https://jsplumbtoolkit.com/) (community edition, MIT) - draw bug paths
   * [Marked](https://github.com/chjj/marked) (BSD) - view documentation for checkers written in markdown (generated dynamically)
