@@ -8,12 +8,12 @@
 """
 Util module.
 """
-
-
 import itertools
 import json
-from typing import TextIO
+from math import ceil
+from typing import Callable, TextIO
 import os
+
 import portalocker
 
 from codechecker_common.logger import get_logger
@@ -43,6 +43,36 @@ def chunks(iterator, n):
     for first in iterator:
         rest_of_chunk = itertools.islice(iterator, 0, n - 1)
         yield itertools.chain([first], rest_of_chunk)
+
+
+def progress(g, count: int, n: int,
+             callback: Callable[[int, float], None]):
+    """
+    Wraps a generator of a known total length and fires 'callback' after having
+    yielded every (T/N)th element. The 'callback' is given the index of the
+    element handled just before firing it, and the percentage of progress.
+    """
+    # E.g., if count == 100 and n == 5, then becomes [100, 95, ..., 10, 5, 0].
+    try:
+        checkpoints = [count] + list(reversed(
+            [list(chk)[0]
+             for chk in chunks(
+                 range(0, count + 1),
+                 int(ceil(count / n))
+             )]))
+        if checkpoints[-1] == 0:
+            checkpoints.pop()
+    except ValueError:
+        # The range is too small to have (count / n) many slices.
+        checkpoints = [count]
+
+    i = 0
+    for e in g:
+        i = i + 1
+        yield e
+        if i == checkpoints[-1]:
+            callback(i, float(i) / count * 100)
+            checkpoints.pop()
 
 
 def load_json(path: str, default=None, lock=False, display_warning=True):
