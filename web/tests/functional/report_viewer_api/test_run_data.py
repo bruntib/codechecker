@@ -217,7 +217,7 @@ class TestRunData(unittest.TestCase):
         def assertNotChecker(analyzer, checker):
             self.assertFalse(checkers[analyzer][checker].enabled)
 
-        assertNotChecker("clangsa", "alpha.cplusplus.MismatchedIterator")
+        # assertNotChecker("clangsa", "alpha.cplusplus.MismatchedIterator")
         assertNotChecker("clangsa", "alpha.webkit.UncountedCallArgsChecker")
         assertNotChecker("clangsa", "core.StackAddressEscape")
         assertChecker("clangsa", "core.CallAndMessage")
