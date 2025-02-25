@@ -131,7 +131,7 @@ class TestSkeleton(unittest.TestCase):
         cmd = [self._codechecker_cmd,
                'analyze', 'compile_command.json',
                '-o', 'reports',
-               '--z3', 'on']
+               '--analyzer-config', 'clangsa:enable-z3=on']
         test_project_path = self._testproject_data['project_path']
         output, _, _ = call_command(cmd, cwd=test_project_path, env=self.env)
         self.z3_capable = 'Z3 solver cannot be enabled' not in output
@@ -156,7 +156,7 @@ class TestSkeleton(unittest.TestCase):
             self._codechecker_cmd, 'analyze',
             'compile_command.json',
             '-o', 'reports',
-            '--z3', 'on',
+            '--analyzer-config', 'clangsa:enable-z3=on',
             '--verbose', 'debug']
         output, _, ret = call_command(
             cmd, cwd=test_project_path, env=self.env)
@@ -174,7 +174,7 @@ class TestSkeleton(unittest.TestCase):
             self._codechecker_cmd, 'analyze',
             'compile_command.json',
             '-o', 'reports',
-            '--z3-refutation', 'on',
+            '--analyzer-config', 'clangsa:cc-enable-z3-refutation=on',
             '--verbose', 'debug']
         output, _, ret = call_command(
             cmd, cwd=test_project_path, env=self.env)

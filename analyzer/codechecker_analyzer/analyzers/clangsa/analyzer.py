@@ -124,7 +124,20 @@ class ClangSA(analyzer_base.SourceAnalyzer):
     __additional_analyzer_config = {
         'cc-verbatim-args-file':
             'A file path containing flags that are forwarded verbatim to the '
-            'analyzer tool. E.g.: cc-verbatim-args-file=<filepath>'
+            'analyzer tool. E.g.: cc-verbatim-args-file=<filepath>',
+        'cc-enable-z3':
+            'Enable Z3 as the solver backend. This allows reasoning over more '
+            'complex queries, but performance is much worse than the default '
+            'range-based constraint solver system. WARNING: Z3 as the only '
+            'backend is a highly experimental and likely unstable feature.'
+            'Possible values: on, off. (default: off)',
+        'cc-enable-z3-refutation':
+            'Switch on/off the Z3 SMT Solver backend to reduce false '
+            'positives. The results of the ranged based constraint solver in '
+            'the Clang Static Analyzer will be cross checked with the Z3 SMT '
+            'solver. This should not cause that much of a slowdown compared '
+            'to using only the Z3 solver. Possible values: on, off (default: '
+            'off)'
     }
 
     def __init__(self, cfg_handler, buildaction):
@@ -628,11 +641,6 @@ class ClangSA(analyzer_base.SourceAnalyzer):
         handler.report_hash = args.report_hash \
             if 'report_hash' in args else None
 
-        handler.enable_z3 = 'enable_z3' in args and args.enable_z3 == 'on'
-
-        handler.enable_z3_refutation = 'enable_z3_refutation' in args and \
-            args.enable_z3_refutation == 'on'
-
         handler.add_gcc_include_dirs_with_isystem = \
             'add_gcc_include_dirs_with_isystem' in args and \
             args.add_gcc_include_dirs_with_isystem
@@ -721,6 +729,10 @@ class ClangSA(analyzer_base.SourceAnalyzer):
                     except FileNotFoundError:
                         LOG.error(f"File not found: {cfg.value}")
                         sys.exit(1)
+                elif cfg.option == 'cc-enable-z3':
+                    handler.enable_z3 = cfg.value == 'on'
+                elif cfg.option == 'cc-enable-z3-refutation':
+                    handler.enable_z3_refutation = cfg.value == 'on'
                 else:
                     handler.checker_config.append(f"{cfg.option}={cfg.value}")
 

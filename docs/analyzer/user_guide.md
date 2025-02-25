@@ -323,18 +323,23 @@ analyzer arguments:
                         analysis of a particular file takes longer than this
                         time, the analyzer is killed and the analysis is
                         considered as a failed one.
-  --z3 {on,off}         Enable Z3 as the solver backend. This allows reasoning
-                        over more complex queries, but performance is much worse
-                        than the default range-based constraint solver system.
-                        WARNING: Z3 as the only backend is a highly
-                        experimental and likely unstable feature. (default: off)
+  --z3 {on,off}         DEPRECATED. Enable Z3 as the solver backend. This allows
+                        reasoning over more complex queries, but performance is
+                        much worse than the default range-based constraint
+                        solver system. WARNING: Z3 as the only backend is a
+                        highly experimental and likely unstable feature. The
+                        option has been migrated under the ClangSA analyzer
+                        options: --analyzer-config
+                        clangsa:cc-enable-z3=on (default: off)
   --z3-refutation {on,off}
-                        Switch on/off the Z3 SMT Solver backend to reduce
-                        false positives. The results of the ranged based
+                        DEPRECATED. Switch on/off the Z3 SMT Solver backend to
+                        reduce false positives. The results of the ranged based
                         constraint solver in the Clang Static Analyzer will be
                         cross checked with the Z3 SMT solver. This should not
                         cause that much of a slowdown compared to using only the
-                        Z3 solver. (default: on)
+                        Z3 solver. The option has been migrated under the
+                        ClangSA analyzer options: --analyzer-config
+                        clangsa:cc-enable-z3=on (default: on)
 
 cross translation unit analysis arguments:
 
@@ -1256,18 +1261,23 @@ analyzer arguments:
                         analysis of a particular file takes longer than this
                         time, the analyzer is killed and the analysis is
                         considered as a failed one.
-  --z3 {on,off}         Enable Z3 as the solver backend. This allows reasoning
-                        over more complex queries, but performance is much worse
-                        than the default range-based constraint solver system.
-                        WARNING: Z3 as the only backend is a highly
-                        experimental and likely unstable feature. (default: off)
+  --z3 {on,off}         DEPRECATED. Enable Z3 as the solver backend. This allows
+                        reasoning over more complex queries, but performance is
+                        much worse than the default range-based constraint
+                        solver system. WARNING: Z3 as the only backend is a
+                        highly experimental and likely unstable feature. The
+                        option has been migrated under the ClangSA analyzer
+                        options: --analyzer-config
+                        clangsa:cc-enable-z3=on (default: off)
   --z3-refutation {on,off}
-                        Switch on/off the Z3 SMT Solver backend to reduce
-                        false positives. The results of the ranged based
+                        DEPRECATED. Switch on/off the Z3 SMT Solver backend to
+                        reduce false positives. The results of the ranged based
                         constraint solver in the Clang Static Analyzer will be
                         cross checked with the Z3 SMT solver. This should not
                         cause that much of a slowdown compared to using only the
-                        Z3 solver. (default: on)
+                        Z3 solver. The option has been migrated under the
+                        ClangSA analyzer options: --analyzer-config
+                        clangsa:cc-enable-z3=on (default: on)
 ```
 
 CodeChecker supports several analyzer tools. Currently, these analyzers are

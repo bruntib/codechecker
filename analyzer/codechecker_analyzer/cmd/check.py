@@ -456,14 +456,18 @@ used to generate a log file on the fly.""")
                                dest='enable_z3',
                                choices=['on', 'off'],
                                default='off',
-                               help="Enable Z3 as the solver backend. "
+                               help="DEPRECATED. "
+                                    "Enable Z3 as the solver backend. "
                                     "This allows reasoning over more "
                                     "complex queries, but performance is "
                                     "much worse than the default "
                                     "range-based constraint solver "
                                     "system. WARNING: Z3 as the only "
                                     "backend is a highly experimental "
-                                    "and likely unstable feature.")
+                                    "and likely unstable feature. The option "
+                                    "has been migrated under the ClangSA "
+                                    "analyzer options: --analyzer-config "
+                                    "clangsa:cc-enable-z3=on")
 
     clang_has_z3_refutation = analyzer_types.is_z3_refutation_capable()
 
@@ -472,7 +476,8 @@ used to generate a log file on the fly.""")
                                choices=['on', 'off'],
                                default='on' if clang_has_z3_refutation
                                else 'off',
-                               help="Switch on/off the Z3 SMT Solver "
+                               help="DEPRECATED. "
+                                    "Switch on/off the Z3 SMT Solver "
                                     "backend to "
                                     "reduce false positives. The results "
                                     "of the ranged based constraint "
@@ -480,7 +485,10 @@ used to generate a log file on the fly.""")
                                     "will be cross checked with the Z3 "
                                     "SMT solver. This should not cause "
                                     "that much of a slowdown compared to "
-                                    "using only the Z3 solver.")
+                                    "using only the Z3 solver. The option "
+                                    "has been migrated under the ClangSA "
+                                    "analyzer options: --analyzer-config "
+                                    "clangsa:cc-enable-z3-refutation=on")
 
     ctu_opts = parser.add_argument_group(
         "cross translation unit analysis arguments",

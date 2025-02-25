@@ -512,14 +512,18 @@ def add_arguments_to_parser(parser):
                                dest='enable_z3',
                                choices=['on', 'off'],
                                default='off',
-                               help="Enable Z3 as the solver backend. "
+                               help="DEPRECATED. "
+                                    "Enable Z3 as the solver backend. "
                                     "This allows reasoning over more "
                                     "complex queries, but performance is "
                                     "much worse than the default "
                                     "range-based constraint solver "
                                     "system. WARNING: Z3 as the only "
                                     "backend is a highly experimental "
-                                    "and likely unstable feature.")
+                                    "and likely unstable feature. The option "
+                                    "has been migrated under the ClangSA "
+                                    "analyzer options: --analyzer-config "
+                                    "clangsa:cc-enable-z3=on")
 
     clang_has_z3_refutation = analyzer_types.is_z3_refutation_capable()
 
@@ -528,7 +532,8 @@ def add_arguments_to_parser(parser):
                                choices=['on', 'off'],
                                default='on' if clang_has_z3_refutation
                                else 'off',
-                               help="Switch on/off the Z3 SMT Solver "
+                               help="DEPRECATED. "
+                                    "Switch on/off the Z3 SMT Solver "
                                     "backend to "
                                     "reduce false positives. The results "
                                     "of the ranged based constraint "
@@ -536,7 +541,10 @@ def add_arguments_to_parser(parser):
                                     "will be cross checked with the Z3 "
                                     "SMT solver. This should not cause "
                                     "that much of a slowdown compared to "
-                                    "using only the Z3 solver.")
+                                    "using only the Z3 solver. The option "
+                                    "has been migrated under the ClangSA "
+                                    "analyzer options: --analyzer-config "
+                                    "clangsa:cc-enable-z3-refutation=on")
 
     ctu_opts = parser.add_argument_group(
         "cross translation unit analysis arguments",
@@ -1105,6 +1113,22 @@ def __transform_deprecated_flags(args):
             '"--cppcheckargs" is deprecated. Use "--analyzer-config '
             'cppcheck:cc-verbatim-args-file=<filepath>" instead.')
 
+    args.analyzer_config.append(analyzer_config(
+        f'clangsa:cc-enable-z3={args.enable_z3}'))
+    if args.enable_z3 != 'off':
+        LOG.warning(
+            '"--z3" is deprecated. Use "--analyzer-config '
+            'clangsa:cc-enable-z3=on" instead.')
+    delattr(args, 'enable_z3')
+
+    args.analyzer_config.append(analyzer_config(
+        f'clangsa:cc-enable-z3-refutation={args.enable_z3_refutation}'))
+    if args.enable_z3_refutation != 'off':
+        LOG.warning(
+            '"--z3-refutation" is deprecated. Use "--analyzer-config '
+            'clangsa:cc-enable-z3-refutation=on" instead.')
+    delattr(args, 'enable_z3_refutation')
+
 
 def check_satisfied_capabilities(args):
     has_error = False
@@ -1137,14 +1161,26 @@ def check_satisfied_capabilities(args):
         LOG.info("hint: Clang 11.0.0 is the earliest version to support it")
         has_error = True
 
-    if 'enable_z3' in args and args.enable_z3 == 'on' and not \
-            analyzer_types.is_z3_capable():
+    z3_enabled = any(
+        cfg.value == 'on'
+        for cfg in args.analyzer_config
+        if cfg.analyzer == clangsa.analyzer.ClangSA.ANALYZER_NAME and
+        cfg.option == 'cc-enable-z3')
+
+    if 'enable_z3' in args and z3_enabled and \
+            not analyzer_types.is_z3_capable():
         LOG.error("Z3 solver cannot be enabled as Clang was not compiled with "
                   "Z3!")
         has_error = True
 
-    if 'enable_z3_refutation' in args and args.enable_z3_refutation == 'on' \
-            and not analyzer_types.is_z3_capable():
+    z3_refutation_enabled = any(
+        cfg.value == 'on'
+        for cfg in args.analyzer_config
+        if cfg.analyzer == clangsa.analyzer.ClangSA.ANALYZER_NAME and
+        cfg.option == 'cc-enable-z3-refutation')
+
+    if 'enable_z3_refutation' in args and z3_refutation_enabled and \
+            not analyzer_types.is_z3_capable():
         LOG.error("Z3 refutation cannot be enabled as Clang was not compiled "
                   "with Z3!")
         has_error = True

@@ -83,7 +83,7 @@ To enable the Z3 solver backend, Clang must be built with the
 will automatically detect whether Clang was built with this option and you
 don't have to pass these arguments to the analyzer command itself when using
 CodeChecker, you just have to run the `CodeChecker analyze` command with the
-`--z3` option.
+`--analyzer-config clangsa:enable-z3=on` option.
 
 You can read more about Z3 Theorem Prover
 [here](https://github.com/Z3Prover/z3/wiki).
@@ -100,7 +100,7 @@ clang built with Z3, the bug refutation can be enabled by passing
 analyzer. CodeChecker will automatically detect that the Clang was built with
 this option and you don't have to pass these arguments to the analyzer command
 itself when using CodeChecker, you just have to run the CodeChecker analyze
-command with the `--z3-refutation` option.
+command with the `--analyzer-config clangsa:enable-z3-refutation=on` option.
 
 You can read more about refutation with the Z3 SMT Solver
 [here](https://docs.google.com/document/d/1-HEblH92VxdxDp04vDKjFa4_ZL9l2oPVLFtQUfLKSOo/).
@@ -128,7 +128,7 @@ Then __clang-tidy__ will attempt to read configuration for each analyzed source 
 from a `.clang-tidy` file located in the closest parent directory of the
 analyzed source file.
 
-So by executing `CodeChecker analyze compile_commands.json -o ./reports --analyzer-config 'clang-tidy:take-config-from-directory=true'`, CodeChecker will generate a clang-tidy command which will NOT 
+So by executing `CodeChecker analyze compile_commands.json -o ./reports --analyzer-config 'clang-tidy:take-config-from-directory=true'`, CodeChecker will generate a clang-tidy command which will NOT
 contain the -checks option at all so your .clang-tidy file will take precedence.
 
 The `.clang-tidy` configuration file can be in JSON or YAML format.
