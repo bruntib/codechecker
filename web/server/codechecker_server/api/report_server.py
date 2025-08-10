@@ -3945,9 +3945,13 @@ class ThriftRequestHandler:
                                       self._get_username())
         ih.check_store_input_validity_at_face_value()
         m: MassStoreRunTask = ih.create_mass_store_task(is_async)
-        self._task_manager.push_task(m)
 
-        return m.token
+        if is_async:
+            self._task_manager.push_task(m)
+            return m.token
+        else:
+            m._implementation(self._task_manager)
+            return -1
 
     @exc_to_thrift_reqfail
     @timeit
@@ -3966,41 +3970,7 @@ class ThriftRequestHandler:
                                          trimPathPrefixes=trim_path_prefixes,
                                          description=description,
                                          )
-        token = self.__massStoreRun_common(False, b64zip, store_opts)
-
-        LOG.info("massStoreRun(): Blocking until task '%s' terminates ...",
-                 token)
-
-        # To be compatible with older (<= 6.24, API <= 6.58) clients which
-        # may keep using the old API endpoint, simulate awaiting the
-        # background task in the API handler.
-        while True:
-            time.sleep(5)
-            t = self._task_manager.get_task_record(token)
-            if t.is_in_terminated_state:
-                if t.status == "failed":
-                    raise codechecker_api_shared.ttypes.RequestFailed(
-                        codechecker_api_shared.ttypes.ErrorCode.GENERAL,
-                        "massStoreRun()'s processing failed. Here follow "
-                        f"the details:\n\n{t.comments}")
-                if t.status == "cancelled":
-                    raise codechecker_api_shared.ttypes.RequestFailed(
-                        codechecker_api_shared.ttypes.ErrorCode.GENERAL,
-                        "Server administrators cancelled the processing of "
-                        "the massStoreRun() request!")
-                break
-
-        # Prior to CodeChecker 6.25.0 (API v6.59), massStoreRun() was
-        # completely synchronous and blocking, and the implementation of the
-        # storage logic returned the ID of the run that was stored by the
-        # call.
-        # massStoreRun() was implemented in
-        # commit 2b29d787599da0318cd23dbe816377b9bce7236c (September 2017),
-        # replacing the previously used (and then completely removed!)
-        # addCheckerRun() function, which also returned the run's ID.
-        # The official client implementation stopped using this returned value
-        # from the moment of massStoreRun()'s implementation.
-        return -1
+        return self.__massStoreRun_common(False, b64zip, store_opts)
 
     @exc_to_thrift_reqfail
     @timeit
