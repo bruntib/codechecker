@@ -19,7 +19,7 @@ import time
 import unittest
 import uuid
 
-from typing import Callable, List
+from typing import Callable
 
 from codechecker_api.codeCheckerDBAccess_v6.ttypes import CommentKind, \
     DetectionStatus, Order, ReviewStatus, ReviewStatusRule, \
@@ -163,7 +163,7 @@ class TestReviewStatus(unittest.TestCase):
         for comment in comments:
             self.assertTrue(self._cc_client.removeComment(comment.id))
 
-    def __check_value_order(self, values: List, order):
+    def __check_value_order(self, values: list, order):
         """ Checks the order of the given values. """
         prev = None
         for value in values:

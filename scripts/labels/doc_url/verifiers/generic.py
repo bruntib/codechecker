@@ -8,7 +8,7 @@
 """
 Implements the logic for generic verification of documentation URLs.
 """
-from typing import Iterable, Optional, Tuple, cast
+from typing import Iterable, Optional, cast
 
 from lxml import html
 import lxml.etree
@@ -20,7 +20,7 @@ from ...util import Ternary
 from .status import Status
 
 
-Outcome = Tuple[Status, Optional[http.Response]]
+Outcome = tuple[Status, Optional[http.Response]]
 
 
 class Base:

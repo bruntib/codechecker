@@ -18,7 +18,7 @@ import os
 import signal
 import socket
 import sys
-from typing import List, Optional, Tuple, cast
+from typing import Optional, cast
 
 from alembic import config
 from alembic import script
@@ -471,7 +471,7 @@ def check_product_db_status(cfg_sql_server, migration_root, environ):
     config_session = sessionmaker(bind=engine)
     sess = config_session()
 
-    products: List[ORMProduct] = []
+    products: list[ORMProduct] = []
     try:
         products = sess.query(ORMProduct) \
             .order_by(ORMProduct.endpoint.asc()) \
@@ -597,7 +597,7 @@ def __db_migration(migration_root,
 
 def __db_migration_multiple(
     cfg_sql_server, migration_root, environ,
-    products_requested_for_upgrade: Optional[List[str]] = None,
+    products_requested_for_upgrade: Optional[list[str]] = None,
     force_upgrade: bool = False
 ) -> int:
     """
@@ -612,7 +612,7 @@ def __db_migration_multiple(
     prod_statuses = check_product_db_status(cfg_sql_server,
                                             migration_root,
                                             environ)
-    products_to_upgrade: List[str] = []
+    products_to_upgrade: list[str] = []
     for endpoint in (products_requested_for_upgrade or []):
         avail = prod_statuses.get(endpoint)
         if not avail:
@@ -623,7 +623,7 @@ def __db_migration_multiple(
     products_to_upgrade = list(prod_statuses.keys())
     products_to_upgrade.sort()
 
-    def _get_migration_decisions() -> List[Tuple[str, str, bool]]:
+    def _get_migration_decisions() -> list[tuple[str, str, bool]]:
         # The lifetime of the CONFIG database connection is scoped to this
         # helper function, as keeping it alive throughout PRODUCT migrations
         # could cause timeouts.
@@ -631,7 +631,7 @@ def __db_migration_multiple(
         cfg_session_factory = sessionmaker(bind=cfg_engine)
         cfg_session = cfg_session_factory()
 
-        scheduled_upgrades_or_inits: List[Tuple[str, str, bool]] = []
+        scheduled_upgrades_or_inits: list[tuple[str, str, bool]] = []
         for endpoint in products_to_upgrade:
             LOG.info("Checking: %s", endpoint)
             connection_str: Optional[str] = None
@@ -717,7 +717,7 @@ def __db_migration_multiple(
     LOG.info("========================")
 
     if scheduled_upgrades_or_inits:
-        failed_products: List[Tuple[str, DBStatus]] = []
+        failed_products: list[tuple[str, DBStatus]] = []
         thr_count = util.clamp(1, len(scheduled_upgrades_or_inits),
                                cpu_count())
         with Pool(max_workers=thr_count) as executor:
@@ -728,8 +728,8 @@ def __db_migration_multiple(
                         # Bind the first 2 non-changing arguments of
                         # __db_migration, this is fixed for the execution.
                         partial(__db_migration, migration_root, environ),
-                        # Transform List[Tuple[str, str, bool]] into an
-                        # Iterable[Tuple[str], Tuple[str], Tuple[bool]],
+                        # Transform list[tuple[str, str, bool]] into an
+                        # Iterable[tuple[str], tuple[str], tuple[bool]],
                         # and immediately unpack it, thus providing the other
                         # 3 arguments of __db_migration as a parameter pack.
                         *zip(*scheduled_upgrades_or_inits))):

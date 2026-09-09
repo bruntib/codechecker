@@ -7,13 +7,10 @@
 # -------------------------------------------------------------------------
 
 import logging
-from typing import List
-
 from codechecker_report_converter.report import (Report,
                                                  get_or_create_file,
                                                  File)
 
-from typing import Dict
 import os
 import json
 from ..analyzer_result import AnalyzerResultBase
@@ -42,10 +39,10 @@ CodeChecker store ./codechecker_pvs_studio_reports -n pvs_studio"""
 
     __severities = ["UNSPECIFIED", "HIGH", "MEDIUM", "LOW"]
 
-    def get_reports(self, file_path: str) -> List[Report]:
+    def get_reports(self, file_path: str) -> list[Report]:
         """ Get reports from the PVS-Studio analyzer result. """
 
-        reports: List[Report] = []
+        reports: list[Report] = []
 
         if not os.path.exists(file_path):
             LOG.info("Report file does not exist: %s", file_path)
@@ -64,7 +61,7 @@ CodeChecker store ./codechecker_pvs_studio_reports -n pvs_studio"""
                         file_path)
             return reports
 
-        file_cache: Dict[str, File] = {}
+        file_cache: dict[str, File] = {}
         for bug in bugs:
             bug_positions = bug['positions']
 

@@ -7,7 +7,7 @@
 # -------------------------------------------------------------------------
 """Provides implementations for the tool's pipeline."""
 from enum import IntFlag, auto as Enumerator
-from typing import NamedTuple, Optional, Tuple, Type, cast
+from typing import NamedTuple, Optional, cast
 
 from codechecker_common.compatibility.multiprocessing import Pool
 
@@ -55,12 +55,12 @@ class ReturnFlags(IntFlag):
 
 
 def execute(analyser: str,
-            verifier_class: Type,
+            verifier_class: type,
             labels: SingleLabels,
             process_count: int,
             skip_fixes: bool,
             reset_urls: bool
-            ) -> Tuple[ReturnFlags, SingleLabels, Statistics]:
+            ) -> tuple[ReturnFlags, SingleLabels, Statistics]:
     """Runs one instance of the verification pipeline."""
     trace("Running over %d %s.",
           process_count,

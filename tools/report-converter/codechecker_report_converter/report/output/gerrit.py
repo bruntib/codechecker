@@ -12,7 +12,7 @@ import logging
 import os
 import re
 
-from typing import Dict, List, Union
+from typing import Union
 
 from codechecker_report_converter.report import Report
 
@@ -20,7 +20,7 @@ from codechecker_report_converter.report import Report
 LOG = logging.getLogger('report-converter')
 
 
-def convert(reports: List[Report]) -> Dict:
+def convert(reports: list[Report]) -> dict:
     """Convert reports to gerrit review format.
 
     Process the required environment variables and convert the reports
@@ -58,11 +58,11 @@ def mandatory_env_var_is_set():
     return no_missing_env_var
 
 
-def __convert_reports(reports: List[Report],
+def __convert_reports(reports: list[Report],
                       repo_dir: Union[str, None],
                       report_url: Union[str, None],
-                      changed_files: List[str],
-                      changed_file_path: Union[str, None]) -> Dict:
+                      changed_files: list[str],
+                      changed_file_path: Union[str, None]) -> dict:
     """Convert the given reports to gerrit json format.
 
     This function will convert the given report to Gerrit json format.
@@ -75,7 +75,7 @@ def __convert_reports(reports: List[Report],
     changed_files - list of the changed files
     checker_labels
     """
-    review_comments: Dict[str, List[Dict]] = {}
+    review_comments: dict[str, list[dict]] = {}
 
     report_count = 0
     report_messages_in_unchanged_files = []
@@ -136,7 +136,7 @@ def __convert_reports(reports: List[Report],
     return review
 
 
-def __get_changed_files(changed_file_path: Union[None, str]) -> List[str]:
+def __get_changed_files(changed_file_path: Union[None, str]) -> list[str]:
     """Return a list of changed files.
 
     Process the given gerrit changed file object and return a list of
@@ -145,7 +145,7 @@ def __get_changed_files(changed_file_path: Union[None, str]) -> List[str]:
     The file can contain some garbage values at start, so we use regex
     to find a json object.
     """
-    changed_files: List[str] = []
+    changed_files: list[str] = []
 
     if not changed_file_path or not os.path.exists(changed_file_path):
         return changed_files

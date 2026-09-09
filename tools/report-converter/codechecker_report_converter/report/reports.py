@@ -8,7 +8,7 @@
 
 import logging
 
-from typing import Callable, Iterable, List, Optional, Set
+from typing import Callable, Iterable, Optional
 
 from codechecker_report_converter.report import Report, SkipListHandlers
 from codechecker_report_converter.report.hash import get_report_path_hash
@@ -21,7 +21,7 @@ class GenericSuppressHandler:
     store_suppress_bug_id: Callable[[str, str, str, str], bool]
 
 
-def get_mentioned_original_files(reports: List[Report]) -> Set[str]:
+def get_mentioned_original_files(reports: list[Report]) -> set[str]:
     """ Get all mentioned files from the given reports. """
     files = set()
 
@@ -31,7 +31,7 @@ def get_mentioned_original_files(reports: List[Report]) -> Set[str]:
     return files
 
 
-def get_changed_files(reports: List[Report]):
+def get_changed_files(reports: list[Report]):
     """ Get all changed files from the given reports. """
     changed_files = set()
 
@@ -41,7 +41,7 @@ def get_changed_files(reports: List[Report]):
     return changed_files
 
 
-def dump_changed_files(changed_files: Set[str]):
+def dump_changed_files(changed_files: set[str]):
     """ Dump changed files. """
     if not changed_files:
         return
@@ -53,12 +53,12 @@ def dump_changed_files(changed_files: Set[str]):
 
 
 def skip(
-    reports: List[Report],
-    processed_path_hashes: Optional[Set[str]] = None,
+    reports: list[Report],
+    processed_path_hashes: Optional[set[str]] = None,
     skip_handlers: Optional[SkipListHandlers] = None,
     suppr_handler: Optional[GenericSuppressHandler] = None,
     review_status_filter: Optional[Iterable[str]] = None
-) -> List[Report]:
+) -> list[Report]:
     """ Skip reports. """
     kept_reports = []
     for report in reports:

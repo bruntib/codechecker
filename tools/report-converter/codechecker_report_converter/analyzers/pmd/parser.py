@@ -8,7 +8,6 @@
 
 import json
 import os
-from typing import List
 
 from codechecker_report_converter.report import (
     BugPathEvent,
@@ -23,8 +22,8 @@ class PMDParser:
     def __init__(self):
         self._file_cache = {}
 
-    def get_reports(self, file_path: str) -> List[Report]:
-        reports: List[Report] = []
+    def get_reports(self, file_path: str) -> list[Report]:
+        reports: list[Report] = []
 
         with open(file_path, "r", encoding="utf-8") as file:
             data = json.load(file)

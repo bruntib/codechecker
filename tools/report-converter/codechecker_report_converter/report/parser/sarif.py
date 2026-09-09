@@ -12,7 +12,7 @@ import os
 
 from sarif import loader  # type: ignore
 
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 from urllib.parse import urlparse
 
@@ -32,10 +32,10 @@ LOG = logging.getLogger('report-converter')
 # §3.37
 class ThreadFlowInfo:
     def __init__(self):
-        self.bug_path_events: List[BugPathEvent] = []
-        self.bug_path_positions: List[BugPathPosition] = []
-        self.notes: List[BugPathEvent] = []
-        self.macro_expansions: List[MacroExpansion] = []
+        self.bug_path_events: list[BugPathEvent] = []
+        self.bug_path_positions: list[BugPathPosition] = []
+        self.notes: list[BugPathEvent] = []
+        self.macro_expansions: list[MacroExpansion] = []
 
 
 # Parse to/from sarif formats.
@@ -49,13 +49,13 @@ class Parser(BaseParser):
         self,
         analyzer_result_file_path: str,
         _: Optional[str] = None
-    ) -> List[Report]:
+    ) -> list[Report]:
         """ Get reports from the given analyzer result file. """
 
         if not self.has_any_runs(analyzer_result_file_path):
             return []
 
-        reports: List[Report] = []
+        reports: list[Report] = []
         self.result_file_path = analyzer_result_file_path
         self.had_error = False
 
@@ -119,13 +119,13 @@ class Parser(BaseParser):
         ret = load_json(result_file_path)
         return bool(ret and ret["runs"])
 
-    def _get_rules(self, data: Dict) -> Dict[str, Dict]:
+    def _get_rules(self, data: dict) -> dict[str, dict]:
         """
         The list of checkers as per §3.19.23. The standard doesn't
         explicitly state whether this is the list of available checkers, or
         enabled checkers, unfortunately.
         """
-        rules: Dict[str, Dict] = {}
+        rules: dict[str, dict] = {}
 
         driver = data["tool"]["driver"]
         for rule in driver.get("rules", []):
@@ -133,15 +133,15 @@ class Parser(BaseParser):
 
         return rules
 
-    def _get_analyzer_name(self, data: Dict) -> str:
+    def _get_analyzer_name(self, data: dict) -> str:
         """ Get analyzer name from SARIF report. """
         return data.get("tool", {}).get("driver", {}).get("name", "unknown")
 
     def _process_code_flows(
         self,
-        result: Dict,
+        result: dict,
         rule_id: str,
-        rules: Dict[str, Dict]
+        rules: dict[str, dict]
     ) -> ThreadFlowInfo:
         """
         Parse threadFlows (§3.36.3), which is a list of threadFlow objects
@@ -178,8 +178,8 @@ class Parser(BaseParser):
 
     def _process_location(
         self,
-        location: Dict,
-    ) -> Tuple[Optional[File], Optional[Range]]:
+        location: dict,
+    ) -> tuple[Optional[File], Optional[Range]]:
         """
         Parse location (§3.28). Currently we only parse physical locations
         (§3.29), that describe a (file, range) pair, among other things.
@@ -194,7 +194,7 @@ class Parser(BaseParser):
 
         return None, None
 
-    def _get_range(self, physical_loc: Dict) -> Optional[Range]:
+    def _get_range(self, physical_loc: dict) -> Optional[Range]:
         """ Get range from a physical location. """
         region = physical_loc.get("region", {})
         start_line = region.get("startLine")
@@ -256,7 +256,7 @@ class Parser(BaseParser):
 
     def _get_file(
         self,
-        physical_loc: Dict
+        physical_loc: dict
     ) -> Optional[File]:
         """
         Assemble the artifact location (§3.4) for physical_loc. Sarif files
@@ -284,9 +284,9 @@ class Parser(BaseParser):
 
     def _process_message(
         self,
-        msg: Dict,
+        msg: dict,
         rule_id: str,
-        rules: Dict[str, Dict]
+        rules: dict[str, dict]
     ) -> str:
         """
         Parse message (§3.11). Sometimes, the warning message is attributed to
@@ -304,7 +304,7 @@ class Parser(BaseParser):
 
     def convert(
         self,
-        reports: List[Report],
+        reports: list[Report],
         analyzer_info: Optional[AnalyzerInfo] = None
     ):
         """ Converts the given reports to sarif format. """
@@ -357,7 +357,7 @@ class Parser(BaseParser):
             }]
         }
 
-    def _create_result(self, report: Report) -> Dict:
+    def _create_result(self, report: Report) -> dict:
         """ Create result dictionary from the given report. """
         result = {
             "ruleId": report.checker_name,
@@ -428,7 +428,7 @@ class Parser(BaseParser):
         self,
         event: BugPathEvent,
         importance: str
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """ Create location from bug path event. """
         location = self._create_location(event, event.line, event.column)
 
@@ -442,7 +442,7 @@ class Parser(BaseParser):
         pos: BugPathPosition,
         line: Optional[int] = -1,
         column: Optional[int] = -1
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """ Create location from bug path position. """
         if pos.range:
             rng = pos.range

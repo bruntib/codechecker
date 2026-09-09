@@ -23,7 +23,7 @@ import socket
 import ssl
 import sys
 import time
-from typing import Dict, List, Optional, Tuple, cast
+from typing import Optional, cast
 
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.engine.url import make_url
@@ -549,7 +549,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
 
 def _do_db_cleanup(context, check_env,
                    id_: int, endpoint: str, display_name: str,
-                   connection_str: str) -> Tuple[Optional[bool], str]:
+                   connection_str: str) -> tuple[Optional[bool], str]:
     # This functions is a concurrent job handler!
     try:
         prod = Product(id_, endpoint, display_name, connection_str,
@@ -573,7 +573,7 @@ def _do_db_cleanup(context, check_env,
 
 
 def _do_db_cleanups(config_database, context, check_env) \
-        -> Tuple[bool, List[Tuple[str, str]]]:
+        -> tuple[bool, list[tuple[str, str]]]:
     """
     Performs on-demand start-up database cleanup on all the products present
     in the ``config_database``.
@@ -581,7 +581,7 @@ def _do_db_cleanups(config_database, context, check_env) \
     Returns whether database clean-up succeeded for all products, and the
     list of products for which it failed, along with the failure reason.
     """
-    def _get_products() -> List[Product]:
+    def _get_products() -> list[Product]:
         products = []
         cfg_engine = config_database.create_engine()
         cfg_session_factory = sessionmaker(bind=cfg_engine)
@@ -1149,8 +1149,8 @@ def start_server(config_directory: str, workspace_directory: str,
                                task_worker_processes,
                                skip_db_cleanup)
 
-    api_processes: Dict[int, Process] = {}
-    bg_processes: Dict[int, Process] = {}
+    api_processes: dict[int, Process] = {}
+    bg_processes: dict[int, Process] = {}
     requested_api_threads = http_server.manager.worker_processes
     requested_bg_threads = http_server.manager.background_worker_processes
 
@@ -1413,7 +1413,7 @@ def start_server(config_directory: str, workspace_directory: str,
         # process?
         spawn_needs: Counter = Counter()
 
-        def _check_process_one(kind: str, proclist: Dict[int, Process],
+        def _check_process_one(kind: str, proclist: dict[int, Process],
                                pid: int):
             try:
                 p = proclist[pid]
@@ -1450,7 +1450,7 @@ def start_server(config_directory: str, workspace_directory: str,
                 # resulting in a KeyError here.
                 pass
 
-        def _check_processes_many(kind: str, proclist: Dict[int, Process]):
+        def _check_processes_many(kind: str, proclist: dict[int, Process]):
             for pid in sorted(proclist.keys()):
                 _check_process_one(kind, proclist, pid)
 

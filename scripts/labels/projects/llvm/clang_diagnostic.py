@@ -8,7 +8,7 @@
 """
 Fetch the list of Clang compiler diagnostic sections from the documentation.
 """
-from typing import Iterable, Tuple
+from typing import Iterable
 
 from lxml import html
 
@@ -23,7 +23,7 @@ DiagnosticPrefixes = (
 
 
 def get_clang_diagnostic_documentation(request: http.HTMLAcquirer) \
-        -> Iterable[Tuple[str, str, html.HtmlElement]]:
+        -> Iterable[tuple[str, str, html.HtmlElement]]:
     """
     Returns the diagnostic ``<section>``s from the DOM of the documentation
     `URL` page for Clang compiler warnings.

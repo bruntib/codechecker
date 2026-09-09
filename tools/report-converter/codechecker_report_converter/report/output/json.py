@@ -7,12 +7,10 @@
 # -------------------------------------------------------------------------
 """ JSON output helpers. """
 
-from typing import Dict, List
-
 from codechecker_report_converter.report import Report
 
 
-def convert(reports: List[Report]) -> Dict:
+def convert(reports: list[Report]) -> dict:
     """ Convert the given reports to JSON format. """
     version = 1
 

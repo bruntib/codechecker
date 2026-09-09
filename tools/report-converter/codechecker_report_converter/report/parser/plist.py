@@ -17,7 +17,7 @@ import traceback
 import sys
 
 from plistlib import _PlistParser  # type: ignore
-from typing import Any, BinaryIO, Dict, List, Optional, Tuple
+from typing import Any, BinaryIO, Optional
 
 from xml.parsers.expat import ExpatError
 import lxml
@@ -115,15 +115,15 @@ class DiagLoc(TypedDict):
 
 
 class DiagEdge(TypedDict):
-    start: Tuple[DiagLoc, DiagLoc]
-    end: Tuple[DiagLoc, DiagLoc]
+    start: tuple[DiagLoc, DiagLoc]
+    end: tuple[DiagLoc, DiagLoc]
 
 
 class DiagPath(TypedDict):
     kind: str
     message: str
     location: DiagLoc
-    edges: List[DiagEdge]
+    edges: list[DiagEdge]
 
 
 def is_same_control_item(
@@ -174,10 +174,10 @@ def parse(fp: BinaryIO):
 def get_file_index_map(
     plist: Any,
     source_dir_path: str,
-    file_cache: Dict[str, File]
-) -> Dict[int, File]:
+    file_cache: dict[str, File]
+) -> dict[int, File]:
     """ Get file index map from the given plist object. """
-    file_index_map: Dict[int, File] = {}
+    file_index_map: dict[int, File] = {}
 
     for i, orig_file_path in enumerate(plist.get('files', [])):
         file_path = os.path.normpath(os.path.join(
@@ -192,9 +192,9 @@ class Parser(BaseParser):
         self,
         analyzer_result_file_path: str,
         source_dir_path: Optional[str] = None
-    ) -> List[Report]:
+    ) -> list[Report]:
         """ Get reports from the given analyzer result file. """
-        reports: List[Report] = []
+        reports: list[Report] = []
 
         if not source_dir_path:
             source_dir_path = os.path.dirname(analyzer_result_file_path)
@@ -242,9 +242,9 @@ class Parser(BaseParser):
     def __create_report(
         self,
         analyzer_result_file_path: str,
-        diag: Dict,
-        files: Dict[int, File],
-        metadata: Dict[str, Any]
+        diag: dict,
+        files: dict[int, File],
+        metadata: dict[str, Any]
     ) -> Report:
         location = diag.get("location", {})
         checker_name = diag.get("check_name", UnknownChecker[1])
@@ -275,7 +275,7 @@ class Parser(BaseParser):
     def __get_analyzer_name(
         self,
         checker_name: str,
-        metadata: Dict[str, Any]
+        metadata: dict[str, Any]
     ) -> Optional[str]:
         """ Get analyzer name for the given checker name. """
         if metadata:
@@ -303,8 +303,8 @@ class Parser(BaseParser):
     def __get_bug_path_events(
         self,
         diag,
-        files: Dict[int, File]
-    ) -> List[BugPathEvent]:
+        files: dict[int, File]
+    ) -> list[BugPathEvent]:
         """ Get bug path events. """
         events = []
 
@@ -327,8 +327,8 @@ class Parser(BaseParser):
     def __get_bug_path_positions(
         self,
         diag,
-        files: Dict[int, File]
-    ) -> List[BugPathPosition]:
+        files: dict[int, File]
+    ) -> list[BugPathPosition]:
         """ Get bug path positions.
 
         In plist file the source and target of the arrows are provided as
@@ -377,8 +377,8 @@ class Parser(BaseParser):
     def __get_notes(
         self,
         diag,
-        files: Dict[int, File]
-    ) -> List[BugPathEvent]:
+        files: dict[int, File]
+    ) -> list[BugPathEvent]:
         """ Get notes. """
         notes = []
 
@@ -401,8 +401,8 @@ class Parser(BaseParser):
     def __get_macro_expansions(
         self,
         diag,
-        files: Dict[int, File]
-    ) -> List[MacroExpansion]:
+        files: dict[int, File]
+    ) -> list[MacroExpansion]:
         """ Get macro expansion. """
         macro_expansions = []
 
@@ -426,13 +426,13 @@ class Parser(BaseParser):
 
     def convert(
         self,
-        reports: List[Report],
+        reports: list[Report],
         analyzer_info: Optional[AnalyzerInfo] = None
     ):
         """ Converts the given reports. """
         tool_name, tool_version = get_tool_info()
 
-        data: Dict[str, Any] = {
+        data: dict[str, Any] = {
             'files': [],
             'diagnostics': [],
             'metadata': {
@@ -450,7 +450,7 @@ class Parser(BaseParser):
         for report in reports:
             files.update(report.original_files)
 
-        file_index_map: Dict[str, int] = {}
+        file_index_map: dict[str, int] = {}
         for idx, file_path in enumerate(sorted(files)):
             data['files'].append(file_path)
             file_index_map[file_path] = idx
@@ -556,7 +556,7 @@ class Parser(BaseParser):
     def _create_event(
         self,
         event: BugPathEvent,
-        file_index_map: Dict[str, int]
+        file_index_map: dict[str, int]
     ):
         """ Create an event. """
         data = {
@@ -573,7 +573,7 @@ class Parser(BaseParser):
 
         return data
 
-    def _create_control_edges(self, edges: List[Dict]) -> Dict:
+    def _create_control_edges(self, edges: list[dict]) -> dict:
         """ """
         return {'kind': 'control', 'edges': edges}
 
@@ -583,8 +583,8 @@ class Parser(BaseParser):
         start_file: File,
         end_range: Range,
         end_file: File,
-        file_index_map: Dict[str, int]
-    ) -> Dict:
+        file_index_map: dict[str, int]
+    ) -> dict:
         """ Creates a control point. """
         return {
             'start': self._create_range(
@@ -595,7 +595,7 @@ class Parser(BaseParser):
     def _create_note(
         self,
         note: BugPathEvent,
-        file_index_map: Dict[str, int]
+        file_index_map: dict[str, int]
     ):
         """ Creates a note. """
         data = {
@@ -614,7 +614,7 @@ class Parser(BaseParser):
         self,
         file_range: Range,
         file_idx: int
-    ) -> List:
+    ) -> list:
         """ Creates a range. """
         return [
             self._create_location(
@@ -625,7 +625,7 @@ class Parser(BaseParser):
     def _create_macro_expansion(
         self,
         macro_expansion: MacroExpansion,
-        file_index_map: Dict[str, int]
+        file_index_map: dict[str, int]
     ):
         """ Creates a macro expansion. """
         return {
@@ -653,7 +653,7 @@ class Parser(BaseParser):
                 analyzer_result_dir_path = \
                     os.path.dirname(analyzer_result_file_path)
 
-                file_cache: Dict[str, File] = {}
+                file_cache: dict[str, File] = {}
                 files = get_file_index_map(
                     plist, analyzer_result_dir_path, file_cache)
 

@@ -13,7 +13,7 @@ import sys
 import fnmatch
 import re
 
-from typing import Dict, List, Optional, TextIO
+from typing import Optional, TextIO
 
 
 LOG = logging.getLogger('report-converter')
@@ -62,7 +62,7 @@ def get_line(file_path: str, line_no: int, errors: str = 'ignore') -> str:
         return ''
 
 
-def trim_path_prefixes(path: str, prefixes: Optional[List[str]]) -> str:
+def trim_path_prefixes(path: str, prefixes: Optional[list[str]]) -> str:
     """
     Removes the longest matching leading path from the file path.
     """
@@ -101,7 +101,7 @@ def trim_path_prefixes(path: str, prefixes: Optional[List[str]]) -> str:
 
 
 def dump_json_output(
-    data: Dict,
+    data: dict,
     output_file_path: Optional[str] = None,
     out=sys.stdout
 ) -> str:

@@ -6,8 +6,6 @@
 #
 # -------------------------------------------------------------------------
 
-from typing import List
-
 from codechecker_report_converter.report import Report
 from codechecker_report_converter.report.hash import (
     HashType,
@@ -37,7 +35,7 @@ report-converter -t pmd -o ./codechecker_pmd_reports ./pmd_reports.json
 # Store the PMD reports with CodeChecker.
 CodeChecker store ./codechecker_pmd_reports -n pmd"""
 
-    def get_reports(self, file_path: str) -> List[Report]:
+    def get_reports(self, file_path: str) -> list[Report]:
         """Get reports from the given PMD JSON file."""
         return PMDParser().get_reports(file_path)
 

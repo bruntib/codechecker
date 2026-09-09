@@ -7,7 +7,7 @@
 # -------------------------------------------------------------------------
 """Transform URLs based on patterns and heuristics."""
 import re
-from typing import Callable, Dict, Iterable, List, Optional, Union, cast
+from typing import Callable, Iterable, Optional, Union, cast
 
 import packaging.version
 from packaging.version import Version
@@ -15,7 +15,7 @@ from packaging.version import Version
 from .util import lower_bound
 
 
-Versions = List[Version]
+Versions = list[Version]
 LazyVersions = Union[Versions, Callable[[], Versions]]
 
 
@@ -73,7 +73,7 @@ class PerReleaseRules:
             self._releases = None
             self._fetch_releases = releases
 
-        self._rules: Dict[Union[Version,
+        self._rules: dict[Union[Version,
                                 packaging.version.InfinityType,
                                 packaging.version.NegativeInfinityType],
                           Optional[Callable]] = {}

@@ -7,7 +7,7 @@
 # -------------------------------------------------------------------------
 """Provides implementations for the high-level user-facing actions."""
 import sys
-from typing import List, Optional, Tuple, Type
+from typing import Optional
 
 from codechecker_common.compatibility.multiprocessing import Pool
 
@@ -27,7 +27,7 @@ class Worker(_Singleton):
             self._verifier = None
 
     @staticmethod
-    def factory(verifier_class: Type, analyser: str):
+    def factory(verifier_class: type, analyser: str):
         """Initialises the `Singleton` with the required constructor args."""
         obj = Worker()
         obj._verifier = verifier_class(analyser)  # type: ignore
@@ -102,11 +102,11 @@ def verify_checker(verifier: HTTPStatusCodeVerifier,
 
 
 def run_verification(pool: Pool, urls: SingleLabels) \
-        -> Tuple[List[str], int, List[str], List[str]]:
-    ok: List[str] = []
+        -> tuple[list[str], int, list[str], list[str]]:
+    ok: list[str] = []
     skip = 0
-    not_ok: List[str] = []
-    missing: List[str] = []
+    not_ok: list[str] = []
+    missing: list[str] = []
 
     def _consume_result(checker: str,  s: Status):
         if s == Status.OK:
@@ -127,7 +127,7 @@ def run_verification(pool: Pool, urls: SingleLabels) \
 
 
 def reset_checker(verifier: HTTPStatusCodeVerifier,
-                  checker: str, url: str) -> Tuple[bool, Optional[str]]:
+                  checker: str, url: str) -> tuple[bool, Optional[str]]:
     analyser = verifier.analyser
     status = verifier.skip(checker, url)
     if status == Status.SKIP:
@@ -147,7 +147,7 @@ def reset_checker(verifier: HTTPStatusCodeVerifier,
     return True, after_reset
 
 
-def run_reset(pool: Pool, urls: SingleLabels) -> Tuple[int, SingleLabels]:
+def run_reset(pool: Pool, urls: SingleLabels) -> tuple[int, SingleLabels]:
     attempted = 0
     new_urls: SingleLabels = {}
 
@@ -193,7 +193,7 @@ def try_fix_checker(verifier: HTTPStatusCodeVerifier,
     return maybe_fixed
 
 
-def run_fixes(pool: Pool, urls: SingleLabels) -> Tuple[SingleLabels,
+def run_fixes(pool: Pool, urls: SingleLabels) -> tuple[SingleLabels,
                                                        SingleLabels]:
     found: SingleLabels = {}
     gone: SingleLabels = {}

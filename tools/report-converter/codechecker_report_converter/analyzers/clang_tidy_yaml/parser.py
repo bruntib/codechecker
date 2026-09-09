@@ -9,7 +9,7 @@
 import os
 import yaml
 import logging
-from typing import Iterator, List, Tuple
+from typing import Iterator
 
 from codechecker_report_converter.report import BugPathEvent, \
     get_or_create_file, Report
@@ -40,7 +40,7 @@ def get_location_by_offset(filename, offset):
 class Parser(BaseParser):
     """Parser for clang-tidy YAML output."""
 
-    def get_reports(self, file_path: str) -> List[Report]:
+    def get_reports(self, file_path: str) -> list[Report]:
         """Parse Clang-Tidy's YAML output file."""
         with open(file_path, 'r', encoding='utf-8') as file:
             data = yaml.safe_load(file)
@@ -116,8 +116,8 @@ class Parser(BaseParser):
         parts = checker_name.split('-')
         return parts[0] if parts else 'unknown'
 
-    def _parse_line(self, it: Iterator[str], line: str) -> Tuple[
-            List[Report], str]:
+    def _parse_line(self, it: Iterator[str], line: str) -> tuple[
+            list[Report], str]:
         # FIXME: This method is a placeholder to allow instantiation of the
         #  Parser class.
         # The _parse_line method is required because Parser is an abstract

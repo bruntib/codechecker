@@ -9,7 +9,7 @@
 Helpers to parse metadata.json file.
 """
 
-from typing import Any, Dict, Iterable, List, Optional, Set, cast
+from typing import Any, Iterable, Optional, cast
 import os
 
 from codechecker_common.logger import get_logger
@@ -20,18 +20,18 @@ LOG = get_logger('system')
 
 
 AnalyzerStatistics = Any
-AnalyzerList = List[str]
-CheckCommands = List[str]
-CheckDurations = List[float]
+AnalyzerList = list[str]
+CheckCommands = list[str]
+CheckDurations = list[float]
 CheckerNamesView = Iterable[str]
-CheckerToAnalyzer = Dict[str, str]
+CheckerToAnalyzer = dict[str, str]
 CodeCheckerVersion = Optional[str]
-DisabledCheckers = Set[str]
-EnabledCheckers = Set[str]
+DisabledCheckers = set[str]
+EnabledCheckers = set[str]
 # Checker name to enabled status.
-MetadataCheckerInfo = Dict[str, bool]
+MetadataCheckerInfo = dict[str, bool]
 # Analyzer to checker info.
-MetadataCheckers = Dict[str, MetadataCheckerInfo]
+MetadataCheckers = dict[str, MetadataCheckerInfo]
 
 
 def checker_is_unavailable(
@@ -66,9 +66,9 @@ class MetadataInfoParser:
         self.disabled_checkers: DisabledCheckers = set()
         self.checker_to_analyzer: CheckerToAnalyzer = {}
 
-        self.__metadata_dict: Dict[str, Any] = {}
+        self.__metadata_dict: dict[str, Any] = {}
         if os.path.isfile(metadata_file_path):
-            self.__metadata_dict = cast(Dict[str, Any],
+            self.__metadata_dict = cast(dict[str, Any],
                                         load_json(metadata_file_path, {}))
 
             if 'version' in self.__metadata_dict:
@@ -133,7 +133,7 @@ class MetadataInfoParser:
 
     def __insert_analyzer_statistics(
         self,
-        source: Dict[str, Any],
+        source: dict[str, Any],
         dest: AnalyzerStatistics,
         analyzer_name: str
     ):
@@ -160,7 +160,7 @@ class MetadataInfoParser:
 
     def __insert_checkers(
         self,
-        source: Dict[str, Any],
+        source: dict[str, Any],
         dest: AnalyzerStatistics,
         analyzer_name: str
     ):
@@ -176,8 +176,8 @@ class MetadataInfoParser:
 
     def __process_metadata_info_v2(self):
         """ Set metadata information from the new version format json file. """
-        cc_versions: Set[str] = set()
-        check_commands: Set[str] = set()
+        cc_versions: set[str] = set()
+        check_commands: set[str] = set()
 
         tools = self.__metadata_dict.get('tools', {})
         for tool in tools:

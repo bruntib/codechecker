@@ -15,7 +15,7 @@ import os
 import shutil
 
 from operator import itemgetter
-from typing import Iterable, List, Optional
+from typing import Iterable, Optional
 
 from prettytable import HRuleStyle, PrettyTable, TableStyle
 
@@ -61,11 +61,11 @@ def to_rows(lines: Iterable[str]) -> str:
 
     str_parts = []
 
-    lns: List[List[str]] = [
+    lns: list[list[str]] = [
         ['' if e is None else e for e in line] for line in lines]
 
     # Count the column width.
-    widths: List[int] = []
+    widths: list[int] = []
     for line in lns:
         for i, size in enumerate([len(str(x)) for x in line]):
             while i >= len(widths):
@@ -131,7 +131,7 @@ def _fit_table_to_width(
     data_rows = table._rows  # type: ignore[attr-defined]
     show_header = table.header
 
-    widths: List[int] = (
+    widths: list[int] = (
         [len(str(h)) for h in field_names] if show_header
         else [0] * len(field_names)
     )
@@ -161,7 +161,7 @@ def _fit_table_to_width(
     # --- Iterative fixpoint ---
     # assigned[i] holds the final max_width for column i once locked.
     # Initialised to 0; every entry is guaranteed to be set before use.
-    assigned: List[int] = [0] * num_cols
+    assigned: list[int] = [0] * num_cols
     unassigned = list(range(num_cols))
     remaining = available
 
@@ -211,8 +211,8 @@ def _fit_table_to_width(
 
 
 def _make_table(
-    field_names: List[str],
-    data_rows: List[List[str]],
+    field_names: list[str],
+    data_rows: list[list[str]],
     show_header: bool,
     hrules: HRuleStyle = HRuleStyle.FRAME
 ) -> PrettyTable:
@@ -246,7 +246,7 @@ def to_table(
     When ``separate_footer`` is True, the last data row is visually separated
     from the rest by drawing a horizontal rule between every row.
     """
-    lns: List[List[str]] = [
+    lns: list[list[str]] = [
         ['' if e is None else str(e) for e in line] for line in lines]
 
     if not lns:
@@ -286,7 +286,7 @@ def to_csv(lines: Iterable[str]) -> str:
 
     str_parts = []
 
-    lns: List[List[str]] = [
+    lns: list[list[str]] = [
         ['' if e is None else e for e in line] for line in lines]
 
     # Count the columns.

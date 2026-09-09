@@ -6,13 +6,11 @@
 #
 # -------------------------------------------------------------------------
 
-from typing import Dict
-
 
 class Singleton(type):
     """ Helper type to create singleton classes. """
 
-    _instances: Dict = {}
+    _instances: dict = {}
 
     def __call__(cls, *args, **kwargs):
         if cls not in cls._instances:

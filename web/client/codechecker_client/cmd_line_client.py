@@ -20,7 +20,7 @@ import sys
 import shutil
 import time
 import json
-from typing import Dict, Iterable, List, Optional, Set, Tuple
+from typing import Iterable, Optional
 
 from codechecker_api.codeCheckerDBAccess_v6 import constants, ttypes
 from codechecker_api_shared.ttypes import RequestFailed
@@ -61,8 +61,8 @@ def init_logger(level, stream=None, logger_name='system'):
 
 
 def filter_local_file_remote_run(
-    run_args: List[str]
-) -> Tuple[List[str], List[str], List[str]]:
+    run_args: list[str]
+) -> tuple[list[str], list[str], list[str]]:
     """
     Filter out arguments which are local directory, baseline files or remote
     run names.
@@ -128,7 +128,7 @@ def get_diff_type(args) -> ttypes.DiffType:
     assert False, "Unknown ttypes.DiffType: {args}"
 
 
-def get_run_tag(client, run_ids: List[int], tag_name: str):
+def get_run_tag(client, run_ids: list[int], tag_name: str):
     """Return run tag information for the given tag name in the given runs."""
     run_history_filter = ttypes.RunHistoryFilter()
     run_history_filter.tagNames = [tag_name]
@@ -181,8 +181,8 @@ def process_run_args(client, run_args_with_tag: Iterable[str]):
     return run_ids, run_names, run_tags
 
 
-def get_suppressed_reports(reports: List[Report],
-                           review_st: List[ttypes.ReviewStatus]) -> List[str]:
+def get_suppressed_reports(reports: list[Report],
+                           review_st: list[ttypes.ReviewStatus]) -> list[str]:
     """Returns a list of suppressed report hashes."""
     statuses_str = [ttypes.ReviewStatus._VALUES_TO_NAMES[x].lower()
                     for x in review_st]
@@ -194,10 +194,10 @@ def get_suppressed_reports(reports: List[Report],
 
 
 def get_report_dir_results(
-    report_dirs: List[str],
+    report_dirs: list[str],
     report_filter: ttypes.ReportFilter,
     checker_labels: CheckerLabels
-) -> List[Report]:
+) -> list[Report]:
     """Get reports from the given report directories.
 
     Absolute paths are expected to the given report directories.
@@ -356,7 +356,7 @@ def check_run_names(client, check_names):
 
 def check_existing_source_components(
     client,
-    source_components: List[str]
+    source_components: list[str]
 ):
     missing_source_components = []
 
@@ -434,7 +434,7 @@ def get_run_results(client,
     return all_results
 
 
-def validate_filter_values(converted_values: List[int], valid_values,
+def validate_filter_values(converted_values: list[int], valid_values,
                            value_type):
     """
     Check if the value provided by the user is a valid value.
@@ -728,8 +728,8 @@ def handle_list_runs(args):
         # behind the --details flag.
         results = []
         for run in runs:
-            enabled_checkers: Dict[str, Set[str]] = {}
-            info_list: List[ttypes.AnalysisInfo] = client.getAnalysisInfo(
+            enabled_checkers: dict[str, set[str]] = {}
+            info_list: list[ttypes.AnalysisInfo] = client.getAnalysisInfo(
                 ttypes.AnalysisInfoFilter(runId=run.runId),
                 constants.MAX_QUERY_SIZE,
                 0)
@@ -893,8 +893,8 @@ def handle_list_results(args):
 
 def get_source_line_contents(
     client,
-    reports: List[ttypes.ReportData]
-) -> Dict[int, Dict[int, str]]:
+    reports: list[ttypes.ReportData]
+) -> dict[int, dict[int, str]]:
     """
     Get source line contents from the server for the given report data.
     """
@@ -914,9 +914,9 @@ def get_source_line_contents(
 
 def convert_report_data_to_report(
     client,
-    reports_data: List[ttypes.ReportData],
-    output_formats: List[str]
-) -> List[Report]:
+    reports_data: list[ttypes.ReportData],
+    output_formats: list[str]
+) -> list[Report]:
     """
     Convert the given report data list to local reports.
 
@@ -933,7 +933,7 @@ def convert_report_data_to_report(
     if 'html' not in output_formats:
         source_line_contents = get_source_line_contents(client, reports_data)
 
-    file_cache: Dict[int, File] = {}
+    file_cache: dict[int, File] = {}
 
     def cached_report_file_lookup(file_id: int, file_path: str) -> File:
         """
@@ -985,14 +985,14 @@ def get_diff_local_dir_remote_run(
     client,
     report_filter: ttypes.ReportFilter,
     diff_type: ttypes.DiffType,
-    output_formats: List[str],
-    report_dirs: List[str],
-    baseline_files: List[str],
-    remote_run_names: List[str]
-) -> Tuple[List[Report], List[str], List[str]]:
+    output_formats: list[str],
+    report_dirs: list[str],
+    baseline_files: list[str],
+    remote_run_names: list[str]
+) -> tuple[list[Report], list[str], list[str]]:
     """ Compare a local report directory with a remote run. """
     filtered_reports = []
-    filtered_report_hashes: Set[str] = set()
+    filtered_report_hashes: set[str] = set()
 
     context = webserver_context.get_context()
     report_dir_results = get_report_dir_results(
@@ -1083,11 +1083,11 @@ def get_diff_remote_run_local_dir(
     client,
     report_filter: ttypes.ReportFilter,
     diff_type: ttypes.DiffType,
-    output_formats: List[str],
-    remote_run_names: List[str],
-    report_dirs: List[str],
-    baseline_files: List[str]
-) -> Tuple[List[Report], List[str], List[str]]:
+    output_formats: list[str],
+    remote_run_names: list[str],
+    report_dirs: list[str],
+    baseline_files: list[str]
+) -> tuple[list[Report], list[str], list[str]]:
     """ Compares a remote run with a local report directory. """
     filtered_reports = []
     filtered_report_hashes = []
@@ -1155,10 +1155,10 @@ def get_diff_remote_runs(
     client,
     report_filter: ttypes.ReportFilter,
     diff_type: ttypes.DiffType,
-    output_formats: List[str],
+    output_formats: list[str],
     remote_base_run_names: Iterable[str],
     remote_new_run_names: Iterable[str]
-) -> Tuple[List[Report], List[str], List[str]]:
+) -> tuple[list[Report], list[str], list[str]]:
     """
     Compares two remote runs and returns the filtered results.
     """
@@ -1212,11 +1212,11 @@ def get_diff_local_dirs(
     diff_type: ttypes.DiffType,
     # TODO: No output_format argument? How come? Maybe the other functions
     # don't need it either?
-    report_dirs: List[str],
-    baseline_files: List[str],
-    new_report_dirs: List[str],
-    new_baseline_files: List[str]
-) -> Tuple[List[Report], List[str]]:
+    report_dirs: list[str],
+    baseline_files: list[str],
+    new_report_dirs: list[str],
+    new_baseline_files: list[str]
+) -> tuple[list[Report], list[str]]:
     """
     Compares two report directories and returns the filtered results.
     """
@@ -1272,17 +1272,17 @@ def get_diff_local_dirs(
 
 def print_reports(
     print_steps: bool,
-    reports: List[Report],
+    reports: list[Report],
     report_hashes: Iterable[str],
     output_dir: str,
-    output_formats: List[str]
+    output_formats: list[str]
 ):
     if report_hashes:
         LOG.info("Couldn't get local reports for the following baseline "
                  "report hashes: %s", ', '.join(sorted(report_hashes)))
 
     statistics = Statistics()
-    changed_files: Set[str] = set()
+    changed_files: set[str] = set()
     html_builder: Optional[report_to_html.HtmlBuilder] = None
     for report in reports:
         statistics.add_report(report)

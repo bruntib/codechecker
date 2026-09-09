@@ -10,7 +10,7 @@ import logging
 import os
 import xml.etree.ElementTree as ET
 
-from typing import Dict, List, Optional
+from typing import Optional
 
 from codechecker_report_converter.report import File, get_or_create_file, \
     Report
@@ -46,14 +46,14 @@ CodeChecker store ./codechecker_roslynator_reports -n roslynator"""
 
     def __init__(self):
         super().__init__()
-        self.__file_cache: Dict[str, File] = {}
+        self.__file_cache: dict[str, File] = {}
 
     def get_reports(
         self,
         file_path: str
-    ) -> List[Report]:
+    ) -> list[Report]:
         """ Get reports from the given analyzer result. """
-        reports: List[Report] = []
+        reports: list[Report] = []
 
         root = self.__parse_analyzer_result(file_path)
         if root is None:

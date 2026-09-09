@@ -10,7 +10,7 @@ import json
 import logging
 import os
 
-from typing import Dict, List, Optional
+from typing import Optional
 
 from codechecker_report_converter.report import BugPathEvent, File, \
     get_or_create_file, Report
@@ -44,11 +44,11 @@ CodeChecker store ./codechecker_fbinfer_reports -n fbinfer"""
     def __init__(self):
         super().__init__()
         self.__infer_out_parent_dir = None
-        self.__file_cache: Dict[str, File] = {}
+        self.__file_cache: dict[str, File] = {}
 
-    def get_reports(self, file_path: str) -> List[Report]:
+    def get_reports(self, file_path: str) -> list[Report]:
         """ Parse the given analyzer result. """
-        reports: List[Report] = []
+        reports: list[Report] = []
 
         if os.path.isdir(file_path):
             report_file = os.path.join(file_path, "report.json")

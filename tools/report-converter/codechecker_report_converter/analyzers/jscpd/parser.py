@@ -9,7 +9,7 @@
 import os
 import json
 import logging
-from typing import Iterator, List, Tuple
+from typing import Iterator
 
 from codechecker_report_converter.report import BugPathEvent, \
     get_or_create_file, Report
@@ -22,10 +22,10 @@ LOG = logging.getLogger('report-converter')
 class Parser(BaseParser):
     """Parser for JSCPD json output."""
 
-    def get_reports(self, file_path: str) -> List[Report]:
+    def get_reports(self, file_path: str) -> list[Report]:
         """Parse JSCPD's json output file."""
 
-        reports: List[Report] = []
+        reports: list[Report] = []
         try:
             with open(file_path, 'r', encoding="utf-8", errors="ignore") as f:
                 data = json.load(f)
@@ -86,7 +86,7 @@ class Parser(BaseParser):
 
         return report
 
-    def _parse_line(self, it: Iterator[str], line: str) -> Tuple[List[
+    def _parse_line(self, it: Iterator[str], line: str) -> tuple[list[
             Report], str]:
         # FIXME: This method is a placeholder to allow instantiation of the
         #  Parser class.

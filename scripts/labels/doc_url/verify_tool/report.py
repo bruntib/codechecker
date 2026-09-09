@@ -7,8 +7,6 @@
 # -------------------------------------------------------------------------
 """Provides implementations for the high-level reports printed to the user."""
 from collections import deque
-from typing import List
-
 from ...checker_labels import SingleLabels
 from ...output import log, coloured, emoji
 from ...util import plural
@@ -17,9 +15,9 @@ from ..output import Settings as OutputSettings
 
 def print_verifications(analyser: str,
                         urls: SingleLabels,
-                        ok: List[str],
-                        not_ok: List[str],
-                        missing: List[str]):
+                        ok: list[str],
+                        not_ok: list[str],
+                        missing: list[str]):
     if missing:
         log("%s%s: %s %s %s not have a `doc_url` label!",
             emoji(":magnifying_glass_tilted_left:"

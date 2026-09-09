@@ -14,7 +14,7 @@ import logging
 import os
 
 from abc import ABCMeta, abstractmethod
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 from codechecker_report_converter import __title__, __version__
 from codechecker_report_converter.report import File, Report
@@ -48,7 +48,7 @@ def load_json(path: str):
     return ret
 
 
-def get_tool_info() -> Tuple[str, str]:
+def get_tool_info() -> tuple[str, str]:
     """ Get tool info.
 
     If this was called through CodeChecker, this function will return
@@ -80,7 +80,7 @@ class BaseParser(metaclass=ABCMeta):
     def __init__(
         self,
         checker_labels: Optional[CheckerLabels] = None,
-        file_cache: Optional[Dict[str, File]] = None
+        file_cache: Optional[dict[str, File]] = None
     ):
         self._checker_labels = checker_labels
         self._file_cache = file_cache if file_cache is not None else {}
@@ -95,14 +95,14 @@ class BaseParser(metaclass=ABCMeta):
     def get_reports(
         self,
         analyzer_result_file_path: str
-    ) -> List[Report]:
+    ) -> list[Report]:
         """ Get reports from the given analyzer result file. """
         raise NotImplementedError("Subclasses should implement this!")
 
     @abstractmethod
     def convert(
         self,
-        reports: List[Report],
+        reports: list[Report],
         analyzer_info: Optional[AnalyzerInfo] = None
     ):
         """ Converts the given reports. """

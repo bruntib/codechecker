@@ -15,7 +15,7 @@ import plistlib
 import re
 import subprocess
 import sys
-from typing import List, Optional, Tuple
+from typing import Optional
 
 from semver.version import Version
 
@@ -40,7 +40,7 @@ from .result_handler import ClangSAResultHandler
 LOG = get_logger('analyzer')
 
 
-def clang_command_output(command: List[str]) -> str:
+def clang_command_output(command: list[str]) -> str:
     """
     Runs the given Clang command in its proper environment and returns its
     output as a string.
@@ -56,9 +56,9 @@ def clang_command_output(command: List[str]) -> str:
 
 
 def parse_clang_help_page(
-    command: List[str],
+    command: list[str],
     start_label: str
-) -> List[Tuple[str, str]]:
+) -> list[tuple[str, str]]:
     """
     Parse the clang help page starting from a specific label.
     Returns a list of (flag, description) tuples.
@@ -151,7 +151,7 @@ class ClangSA(analyzer_base.SourceAnalyzer):
             .analyzer_binaries[cls.ANALYZER_NAME]
 
     @classmethod
-    def analyzer_plugins(cls) -> List[str]:
+    def analyzer_plugins(cls) -> list[str]:
         """
         Return the list of .so file paths which contain checker plugins to
         ClangSA.
@@ -178,7 +178,7 @@ class ClangSA(analyzer_base.SourceAnalyzer):
                 and f.endswith(".so")]
 
     @classmethod
-    def __add_plugin_load_flags(cls, analyzer_cmd: List[str]):
+    def __add_plugin_load_flags(cls, analyzer_cmd: list[str]):
         """
         ClangSA can be extended with checker plugins. This function extends a
         clang command with these plugins.
@@ -361,7 +361,7 @@ class ClangSA(analyzer_base.SourceAnalyzer):
         cls,
         alpha: bool = True,
         debug: bool = False
-    ) -> List[Tuple[str, str]]:
+    ) -> list[tuple[str, str]]:
         """
         Return the list of the supported checkers.
 
@@ -396,7 +396,7 @@ class ClangSA(analyzer_base.SourceAnalyzer):
         return parse_clang_help_page(command, 'CHECKERS:')
 
     @classmethod
-    def get_checker_config(cls) -> List[analyzer_base.CheckerConfig]:
+    def get_checker_config(cls) -> list[analyzer_base.CheckerConfig]:
         """
         Return the list of checker config options.
 
@@ -431,7 +431,7 @@ class ClangSA(analyzer_base.SourceAnalyzer):
         return result
 
     @classmethod
-    def get_analyzer_config(cls) -> List[analyzer_base.AnalyzerConfig]:
+    def get_analyzer_config(cls) -> list[analyzer_base.AnalyzerConfig]:
         """Return the list of analyzer config options."""
         command = [cls.analyzer_binary(), "-cc1"]
 
@@ -440,7 +440,7 @@ class ClangSA(analyzer_base.SourceAnalyzer):
         command.append("-analyzer-config-help")
 
         native_config = parse_clang_help_page(command, 'OPTIONS:')
-        analyzer_config_list: List[analyzer_base.AnalyzerConfig] = list(map(
+        analyzer_config_list: list[analyzer_base.AnalyzerConfig] = list(map(
             lambda cfg: analyzer_base.AnalyzerConfig(cfg[0], cfg[1], str),
             native_config))
 

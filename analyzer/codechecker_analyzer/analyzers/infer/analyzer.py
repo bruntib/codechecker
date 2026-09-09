@@ -14,7 +14,7 @@ import shlex
 import subprocess
 from pathlib import Path
 import sys
-from typing import List, Optional
+from typing import Optional
 from semver.version import Version
 
 from codechecker_common import util
@@ -139,7 +139,7 @@ class Infer(analyzer_base.SourceAnalyzer):
         return []
 
     @classmethod
-    def get_analyzer_config(cls) -> List[analyzer_base.AnalyzerConfig]:
+    def get_analyzer_config(cls) -> list[analyzer_base.AnalyzerConfig]:
         """
         Config options for infer.
         """

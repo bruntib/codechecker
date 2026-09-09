@@ -10,7 +10,7 @@ import json
 import os
 import re
 import subprocess
-from typing import Iterable, Tuple
+from typing import Iterable
 
 from urllib3.exceptions import HTTPError
 
@@ -52,7 +52,7 @@ RuleRe = re.compile(r"\s+\* \[(?P<name>MD\d+)[^\]]+\]\(#(?P<anchor>\S+)\)")
 
 
 def get_markdownlint_rules(request: http.HTMLAcquirer, base_url: str) \
-        -> Iterable[Tuple[str, str]]:
+        -> Iterable[tuple[str, str]]:
     """Returns ``(rule, anchor)`` pairs of ``markdownlint`` rules."""
     raw_data_url = base_url \
         .replace("github.com", "raw.githubusercontent.com", 1) \

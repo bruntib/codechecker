@@ -6,8 +6,6 @@
 #
 # -------------------------------------------------------------------------
 
-from typing import List
-
 from codechecker_report_converter.report import Report
 
 from ..analyzer_result import AnalyzerResultBase
@@ -37,6 +35,6 @@ report-converter -t kernel-doc -o ./codechecker_kernel_doc_reports \
 # Store the Kernel-Doc reports with CodeChecker.
 CodeChecker store ./codechecker_kernel_doc_reports -n kernel-doc"""
 
-    def get_reports(self, file_path: str) -> List[Report]:
+    def get_reports(self, file_path: str) -> list[Report]:
         """ Get reports from the given analyzer result. """
         return Parser(file_path).get_reports(file_path)

@@ -6,7 +6,7 @@
 #
 # -------------------------------------------------------------------------
 """Clang Static Analyzer."""
-from typing import Dict, Iterable, Optional, Tuple
+from typing import Iterable, Optional
 
 from ... import http_ as http
 from .base import Base
@@ -25,12 +25,12 @@ class ClangSAGenerator(Base):
         self._http = http.HTMLAcquirer()
         self.toc_url = "https://clang.llvm.org/docs/analyzer/checkers.html"
 
-    def generate(self) -> Iterable[Tuple[str, Optional[str]]]:
+    def generate(self) -> Iterable[tuple[str, Optional[str]]]:
         dom = self._http.get_dom(self.toc_url)
         if dom is None:
             return iter(())
 
-        sections: Dict[str, str] = {}
+        sections: dict[str, str] = {}
         for section in dom.xpath(
                 "//section[descendant::a[@class=\"toc-backref\"]]"):
             anchor = section.find(".//a[@class=\"headerlink\"]") \

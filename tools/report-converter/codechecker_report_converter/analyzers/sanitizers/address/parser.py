@@ -8,7 +8,7 @@
 
 import logging
 import re
-from typing import Iterator, Optional, Tuple
+from typing import Iterator, Optional
 
 from codechecker_report_converter.report import Report
 
@@ -109,7 +109,7 @@ class Parser(SANParser):
         self,
         it: Iterator[str],
         line: str
-    ) -> Tuple[Optional[Report], str]:
+    ) -> tuple[Optional[Report], str]:
         report, line = super().parse_sanitizer_message(it, line)
 
         if not report:

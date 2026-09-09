@@ -8,7 +8,7 @@
 """HTTP connections and communication."""
 import datetime
 from http import HTTPStatus as HTTPStatusCode  # pylint: disable=unused-import
-from typing import Dict, Optional, Union, Tuple
+from typing import Optional, Union
 import urllib.parse
 
 from lxml import html
@@ -71,7 +71,7 @@ class HTMLAcquirer:
             url = url.geturl()
         return self._get_dom_raw(url)
 
-    def split_anchor(self, url: URL) -> Tuple[str, str]:
+    def split_anchor(self, url: URL) -> tuple[str, str]:
         if isinstance(url, str) and '#' not in url:
             return url, ""
 
@@ -92,13 +92,13 @@ class CachingHTMLAcquirer(HTMLAcquirer):
     """
 
     DefaultCacheSize = 16
-    CacheType = Tuple[Response, Optional[html.HtmlElement]]
+    CacheType = tuple[Response, Optional[html.HtmlElement]]
 
     def __init__(self, cache_size: int = DefaultCacheSize):
         super().__init__()
         self._cache_capacity = cache_size
-        self._cache: Dict[str, CachingHTMLAcquirer.CacheType] = {}
-        self._cache_lru: Dict[str, datetime.datetime] = {}
+        self._cache: dict[str, CachingHTMLAcquirer.CacheType] = {}
+        self._cache_lru: dict[str, datetime.datetime] = {}
 
     def get_url(self, url: URL) -> Response:
         """

@@ -11,7 +11,7 @@ import os
 import re
 
 from copy import deepcopy
-from typing import Iterator, List, Tuple
+from typing import Iterator
 
 from codechecker_report_converter.report import BugPathEvent, \
     get_or_create_file, Report
@@ -69,7 +69,7 @@ class Parser(BaseParser):
         self,
         it: Iterator[str],
         line: str
-    ) -> Tuple[List[Report], str]:
+    ) -> tuple[list[Report], str]:
         """ Parse the given line. """
         match = self.message_line_re.match(line)
         if match is None:

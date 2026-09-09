@@ -11,7 +11,7 @@ Handle Thrift requests for background task management.
 import datetime
 import os
 import time
-from typing import Dict, List, Optional
+from typing import Optional
 
 from sqlalchemy.sql.expression import and_, or_
 
@@ -186,7 +186,7 @@ class ThriftTaskHandler:
 
     @exc_to_thrift_reqfail
     @timeit
-    def getTasks(self, filters: TaskFilter) -> List[AdministratorTaskInfo]:
+    def getTasks(self, filters: TaskFilter) -> list[AdministratorTaskInfo]:
         """Obtain tasks matching the `filters` for administrators."""
         with DBSession(self._config_db) as session:
             if filters.productIDs is not None and not filters.productIDs:
@@ -295,9 +295,9 @@ class ThriftTaskHandler:
                 elif filters.consumedFlag == Ternary._NAMES_TO_VALUES["ON"]:
                     AND.append(DBTask.consumed.is_(True))
 
-            ret: List[AdministratorTaskInfo] = []
+            ret: list[AdministratorTaskInfo] = []
             has_superuser: Optional[bool] = None
-            product_access_rights: Dict[int, bool] = {}
+            product_access_rights: dict[int, bool] = {}
             for db_task in session.query(DBTask).filter(and_(*AND)).all():
                 if not db_task.product_id:
                     # Tasks associated with the server, and not a specific

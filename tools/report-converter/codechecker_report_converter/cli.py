@@ -16,7 +16,7 @@ import os
 import shutil
 import sys
 
-from typing import Any, Dict, Iterable, Optional, Sequence, Tuple, Union
+from typing import Any, Iterable, Optional, Sequence, Union
 
 
 # If we run this script in an environment where 'codechecker_report_converter'
@@ -108,7 +108,7 @@ def transform_output(
     file_name: str,
     export_type: str,
     clean: bool = False,
-    metadata: Optional[Dict[str, str]] = None
+    metadata: Optional[dict[str, str]] = None
 ):
     """ Creates .plist files from the given output to the given output dir. """
     if clean and os.path.isdir(output_dir):
@@ -124,7 +124,7 @@ def transform_output(
         analyzer_results, output_dir, export_type, file_name, metadata)
 
 
-def process_metadata(metadata) -> Tuple[Dict[str, str], Dict[str, str]]:
+def process_metadata(metadata) -> tuple[dict[str, str], dict[str, str]]:
     """ Returns a tuple of valid and invalid metadata values. """
     if not metadata:
         return {}, {}

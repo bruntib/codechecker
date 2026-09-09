@@ -14,7 +14,7 @@ from math import ceil
 import os
 import json
 import hashlib
-from typing import Optional, List
+from typing import Optional
 import zlib
 
 from sqlalchemy import BigInteger, Boolean, Column, DateTime, Enum, \
@@ -77,8 +77,8 @@ class CheckerSet(Base):
     # If the hash exists in this table, that means the particular CheckerSet
     # was already used before.
     @staticmethod
-    def compute_hash(enabled_checkers: List[int],
-                     disabled_checkers: List[int]) -> str:
+    def compute_hash(enabled_checkers: list[int],
+                     disabled_checkers: list[int]) -> str:
         # Sort lists to create identical hashes.
         enabled_checkers.sort()
         disabled_checkers.sort()
@@ -398,7 +398,7 @@ class ReportPathData(Base):
         return list(map(lambda d: ReportPathData.Item(**d), pd))
 
     @path_data.setter
-    def path_data(self, data: List[Item]):
+    def path_data(self, data: list[Item]):
         self._path_data = zlib.compress(
             json.dumps(list(map(asdict, data))).encode("utf-8"),
             zlib.Z_BEST_COMPRESSION)

@@ -5,7 +5,7 @@
 #  SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #
 # -------------------------------------------------------------------------
-from typing import List, Optional
+from typing import Optional
 from semver.version import Version
 import shlex
 import subprocess
@@ -138,7 +138,7 @@ class Gcc(analyzer_base.SourceAnalyzer):
         return []
 
     @classmethod
-    def get_analyzer_config(cls) -> List[analyzer_base.AnalyzerConfig]:
+    def get_analyzer_config(cls) -> list[analyzer_base.AnalyzerConfig]:
         """
         Config options for gcc.
         """

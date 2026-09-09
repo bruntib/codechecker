@@ -15,7 +15,7 @@ import json
 import os
 import sys
 from collections import defaultdict
-from typing import Dict, Iterable, List, Tuple, Union
+from typing import Iterable, Union
 
 from codechecker_report_converter import twodim
 
@@ -216,7 +216,7 @@ def __guideline_to_label(
 def __get_detailed_checker_info(
     args: argparse.Namespace,
     cl: CheckerLabels
-) -> Dict[str, list]:
+) -> dict[str, list]:
     """
     Returns a dictionary which maps analyzer names to the collection of their
     supported checkers. Checker information is described with tuples of this
@@ -280,7 +280,7 @@ def __print_profiles(args: argparse.Namespace, cl: CheckerLabels):
 
     if 'details' in args:
         header = ['Profile name', 'Description']
-        rows: List[Tuple] = list(cl.get_description('profile').items())
+        rows: list[tuple] = list(cl.get_description('profile').items())
     else:
         header = ['Profile name']
         rows = [(key,) for key in cl.get_description('profile')]
@@ -301,7 +301,7 @@ def __print_severities(args: argparse.Namespace, cl: CheckerLabels):
 
     if 'details' in args:
         header = ['Severity', 'Description']
-        rows: List[Tuple] = list(cl.get_description('severity').items())
+        rows: list[tuple] = list(cl.get_description('severity').items())
     else:
         header = ['Severity']
         rows = [(key,) for key in cl.get_description('severity')]
@@ -330,7 +330,7 @@ def __print_guidelines(args: argparse.Namespace, cl: CheckerLabels):
         header = list(map(__uglify, header))
 
     if args.output_format == 'json':
-        rows: List[Tuple] = [(g, sorted(list(r))) for g, r in result.items()]
+        rows: list[tuple] = [(g, sorted(list(r))) for g, r in result.items()]
     else:
         rows = [(g, ', '.join(sorted(r))) for g, r in result.items()]
 
@@ -382,7 +382,7 @@ def __print_label_values(args: argparse.Namespace, cl: CheckerLabels):
             'command to list available labels.', args.label)
 
 
-def __format_row(row: Tuple) -> Tuple:
+def __format_row(row: tuple) -> tuple:
     """
     Perform some formatting of the detailed checker info.
     row -- A tuple with detailed checker info coming from
@@ -442,7 +442,7 @@ def __print_checkers_json_format(checkers: Iterable, detailed: bool):
         print(json.dumps([c[1] for c in checkers]))
 
 
-def __post_process_result(result: List[Tuple]):
+def __post_process_result(result: list[tuple]):
     """ Postprocess the given result.
 
     It will update the value of the doc_url label and create an absolute file
@@ -475,7 +475,7 @@ def __print_checkers(args: argparse.Namespace, cl: CheckerLabels):
 
     checker_info = __get_detailed_checker_info(args, cl)
 
-    result: List[Tuple] = []
+    result: list[tuple] = []
     for analyzer in args.analyzers:
         if labels:
             checkers = cl.checkers_by_labels(labels, analyzer)
@@ -501,7 +501,7 @@ def __print_checkers(args: argparse.Namespace, cl: CheckerLabels):
 
     if 'details' in args:
         header = ['Status', 'Name', 'Analyzer', 'Description', 'Labels']
-        rows: Union[List[List], List[Tuple]] = list(map(__format_row, result))
+        rows: Union[list[list], list[tuple]] = list(map(__format_row, result))
     else:
         header = ['Name']
         rows = [[r[1]] for r in result]
@@ -535,7 +535,7 @@ def __print_checker_config(args: argparse.Namespace):
     if args.output_format in ['csv', 'json']:
         header = list(map(__uglify, header))
 
-    rows: List[Tuple] = []
+    rows: list[tuple] = []
     analyzer_failures = []
     for analyzer in working_analyzers:
         analyzer_class = analyzer_types.supported_analyzers[analyzer]

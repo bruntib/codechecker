@@ -10,8 +10,6 @@ import json
 import logging
 import os
 
-from typing import Dict, List
-
 from codechecker_report_converter.report import File, get_or_create_file, \
     Report
 
@@ -40,9 +38,9 @@ report-converter -t eslint -o ./codechecker_eslint_reports \
 # Store the ESLint reports with CodeChecker.
 CodeChecker store ./codechecker_eslint_reports -n eslint"""
 
-    def get_reports(self, file_path: str) -> List[Report]:
+    def get_reports(self, file_path: str) -> list[Report]:
         """ Get reports from the given analyzer result. """
-        reports: List[Report] = []
+        reports: list[Report] = []
 
         if not os.path.exists(file_path):
             LOG.error("Report file does not exist: %s", file_path)
@@ -57,7 +55,7 @@ CodeChecker store ./codechecker_eslint_reports -n eslint"""
                       file_path)
             return reports
 
-        file_cache: Dict[str, File] = {}
+        file_cache: dict[str, File] = {}
         for diag in diagnostics:
             file_path = os.path.join(
                 os.path.dirname(file_path), diag.get('filePath'))

@@ -16,7 +16,7 @@ import sys
 
 from collections import defaultdict
 from string import Template
-from typing import Callable, Dict, List, Optional, Set, Tuple
+from typing import Callable, Optional
 
 from codechecker_report_converter.report import BugPathEvent, \
     InvalidFileContentMsg, File, MacroExpansion, Report, report_file, \
@@ -34,8 +34,8 @@ LOG = logging.getLogger('report-converter')
 
 
 SkipReportHandler = Callable[
-    [str, str, int, str, dict, Dict[int, str]],
-    Tuple[bool, list]
+    [str, str, int, str, dict, dict[int, str]],
+    tuple[bool, list]
 ]
 
 
@@ -46,14 +46,14 @@ class HTMLBugPathEvent(TypedDict):
     column: int
 
 
-HTMLBugPathEvents = List[HTMLBugPathEvent]
+HTMLBugPathEvents = list[HTMLBugPathEvent]
 
 
 class HTMLMacroExpansion(HTMLBugPathEvent):
     name: str
 
 
-HTMLMacroExpansions = List[HTMLMacroExpansion]
+HTMLMacroExpansions = list[HTMLMacroExpansion]
 
 
 class Checker(TypedDict):
@@ -80,7 +80,7 @@ class HTMLReport(TypedDict):
     chronologicalOrder: Optional[str]
 
 
-HTMLReports = List[HTMLReport]
+HTMLReports = list[HTMLReport]
 
 
 class FileSource(TypedDict):
@@ -89,7 +89,7 @@ class FileSource(TypedDict):
     content: str
 
 
-FileSources = Dict[str, FileSource]
+FileSources = dict[str, FileSource]
 
 
 class HtmlReportLink(TypedDict):
@@ -114,7 +114,7 @@ class HtmlBuilder:
     ):
         self._checker_labels = checker_labels
         self.layout_dir = layout_dir
-        self.generated_html_reports: Dict[str, HTMLReports] = {}
+        self.generated_html_reports: dict[str, HTMLReports] = {}
         self.files: FileSources = {}
 
         css_dir = os.path.join(self.layout_dir, 'css')
@@ -192,8 +192,8 @@ class HtmlBuilder:
 
     def _get_html_reports(
         self,
-        reports: List[Report]
-    ) -> Tuple[HTMLReports, FileSources]:
+        reports: list[Report]
+    ) -> tuple[HTMLReports, FileSources]:
         """ Get HTML reports from the given reports.
 
         Returns a list of html reports and references to file sources.
@@ -202,7 +202,7 @@ class HtmlBuilder:
         files: FileSources = {}
 
         def to_bug_path_events(
-            events: List[BugPathEvent]
+            events: list[BugPathEvent]
         ) -> HTMLBugPathEvents:
             """ Converts the given events to html compatible format. """
             html_events: HTMLBugPathEvents = []
@@ -218,7 +218,7 @@ class HtmlBuilder:
             return html_events
 
         def to_macro_expansions(
-            macro_expansions: List[MacroExpansion]
+            macro_expansions: list[MacroExpansion]
         ) -> HTMLMacroExpansions:
             """ Converts the given events to html compatible format. """
             html_macro_expansions: HTMLMacroExpansions = []
@@ -270,8 +270,8 @@ class HtmlBuilder:
     def create(
         self,
         output_file_path: str,
-        reports: List[Report]
-    ) -> Tuple[Optional[HTMLReports], Set[str]]:
+        reports: list[Report]
+    ) -> tuple[Optional[HTMLReports], set[str]]:
         """
         Create html file from the given analyzer result file to the output
         path.
@@ -308,7 +308,7 @@ class HtmlBuilder:
         bug to the created html file where the bug can be found.
         """
         # Sort reports based on file path levels.
-        html_report_links: List[HtmlReportLink] = []
+        html_report_links: list[HtmlReportLink] = []
         for html_file, reports in self.generated_html_reports.items():
             for report in reports:
                 html_report_links.append({'link': html_file, 'report': report})
@@ -358,14 +358,14 @@ class HtmlBuilder:
         for reports in self.generated_html_reports.values():
             num_of_reports += len(reports)
 
-        checker_statistics: Dict[str, int] = defaultdict(int)
+        checker_statistics: dict[str, int] = defaultdict(int)
         for reports in self.generated_html_reports.values():
             for report in reports:
                 checker = report['checker']['name']
                 checker_statistics[checker] += 1
 
-        checker_rows: List[List[str]] = []
-        severity_statistics: Dict[str, int] = defaultdict(int)
+        checker_rows: list[list[str]] = []
+        severity_statistics: dict[str, int] = defaultdict(int)
 
         with io.StringIO() as string:
             for checker_name in sorted(checker_statistics):
@@ -385,7 +385,7 @@ class HtmlBuilder:
                     checker_statistics[checker_name]
             checker_statistics_content = string.getvalue()
 
-        severity_rows: List[List[str]] = []
+        severity_rows: list[list[str]] = []
 
         with io.StringIO() as string:
             for severity in sorted(severity_statistics, key=severity_order):
@@ -430,10 +430,10 @@ class HtmlBuilder:
 
 def convert(
     file_path: str,
-    reports: List[Report],
+    reports: list[Report],
     output_dir_path: str,
     html_builder: HtmlBuilder
-) -> Set[str]:
+) -> set[str]:
     """
     Prints the results in the given file to HTML file.
 
@@ -460,7 +460,7 @@ def parse(
     output_path: str,
     layout_dir: str,
     html_builder: Optional[HtmlBuilder] = None
-) -> Set[str]:
+) -> set[str]:
     """
     Parses analyzer result files from the given input directory to the output
     directory.
@@ -487,7 +487,7 @@ def parse(
                  in file_names]
 
     # Source files which modification time changed since the last analysis.
-    changed_source_files: Set[str] = set()
+    changed_source_files: set[str] = set()
 
     if not html_builder:
         html_builder = HtmlBuilder(layout_dir)

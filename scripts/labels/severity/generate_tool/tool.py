@@ -9,7 +9,7 @@
 from collections import deque
 from enum import IntFlag, auto as Enumerator
 import sys
-from typing import List, NamedTuple, Optional, Set, Tuple, Type, cast
+from typing import NamedTuple, Optional, cast
 
 from ...checker_labels import SingleLabels
 from ...output import Settings as GlobalOutputSettings, log, coloured, emoji
@@ -57,16 +57,16 @@ class ReturnFlags(IntFlag):
 
 
 def run_generator(generator: Base, severities: SingleLabels,
-                  checkers_to_skip: Set[str]) \
-        -> Tuple[List[str], SingleLabels, SingleLabels, List[str],
-                 List[str], List[str]]:
+                  checkers_to_skip: set[str]) \
+        -> tuple[list[str], SingleLabels, SingleLabels, list[str],
+                 list[str], list[str]]:
     analyser = generator.analyser
-    ok: List[str] = []
+    ok: list[str] = []
     updated: SingleLabels = {}
     new: SingleLabels = {}
-    gone: List[str] = []
-    generator_skip: List[str] = []
-    directive_skip: List[str] = []
+    gone: list[str] = []
+    generator_skip: list[str] = []
+    directive_skip: list[str] = []
 
     generation_result: SingleLabels = dict(generator.generate())
     for checker in sorted(severities.keys() | generation_result.keys()):
@@ -139,7 +139,7 @@ def run_generator(generator: Base, severities: SingleLabels,
 
 def print_generation(analyser: str,
                      original_severities: SingleLabels,
-                     ok: List[str],
+                     ok: list[str],
                      updated: SingleLabels,
                      new: SingleLabels):
     if not updated and not new:
@@ -207,7 +207,7 @@ def print_gone(analyser: str,
 
 
 def print_missing(analyser: str,
-                  missing: List[str]):
+                  missing: list[str]):
     if not OutputSettings.report_missing():
         log("%s%s: %s %s will not have a `severity` label!",
             emoji(":magnifying_glass_tilted_left:"
@@ -226,10 +226,10 @@ def print_missing(analyser: str,
 
 def execute(
     analyser: str,
-    generator_class: Type,
+    generator_class: type,
     labels: SingleLabels,
-    checkers_to_skip: Set[str]
-) -> Tuple[ReturnFlags, SingleLabels, Statistics]:
+    checkers_to_skip: set[str]
+) -> tuple[ReturnFlags, SingleLabels, Statistics]:
     """
     Runs one instance of the generation for a specific analyser.
     """

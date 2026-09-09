@@ -10,17 +10,17 @@ from collections import deque
 from enum import Enum, auto as Enumerator
 import json
 import pathlib
-from typing import Callable, Dict, List, Optional, Set, cast
+from typing import Callable, Optional, cast
 
 from codechecker_common.checker_labels import split_label_kv
 
 from .output import Settings as OutputSettings, error, trace
 
 
-_ConfigFileLabels = Dict[str, List[str]]
+_ConfigFileLabels = dict[str, list[str]]
 
-SingleLabels = Dict[str, Optional[str]]
-Labels = Dict[str, Dict[str, str]]
+SingleLabels = dict[str, Optional[str]]
+Labels = dict[str, dict[str, str]]
 
 
 K_LabelToolSkipDirective = "label-tool-skip"  # pylint: disable=invalid-name
@@ -45,7 +45,7 @@ class SkipDirectiveRespectStyle(Enum):
     AS_PASSED = Enumerator()
 
 
-def _load_json(path: pathlib.Path) -> Dict:
+def _load_json(path: pathlib.Path) -> dict:
     try:
         with path.open("r") as file:
             return json.load(file)
@@ -63,7 +63,7 @@ def _load_json(path: pathlib.Path) -> Dict:
         raise
 
 
-def _save_json(path: pathlib.Path, data: Dict):
+def _save_json(path: pathlib.Path, data: dict):
     try:
         with path.open("w") as file:
             json.dump(data, file, indent=2, sort_keys=True)
@@ -88,7 +88,7 @@ def _project_labels_by_key(
     value_predicate: Optional[Callable[[str], bool]] = None
 ) -> _ConfigFileLabels:
     """
-    Projects the `label_cfg` to a mapping of ``Checker -> List[T]``, in which
+    Projects the `label_cfg` to a mapping of ``Checker -> list[T]``, in which
     only the **values** of labels with the specified `key` are kept, and all
     other labels are ignored.
 
@@ -115,7 +115,7 @@ class MultipleLabelsError(Exception):
 
 
 def get_checkers_with_ignore_of_key(path: pathlib.Path,
-                                    key: str) -> Set[str]:
+                                    key: str) -> set[str]:
     """
     Loads the checker config label file available at `path` and filters it for
     the list of checkers that are set to ignore/skip labels of the specified
@@ -142,7 +142,7 @@ def get_checker_labels(
     key: str,
     skip_directive_handling: SkipDirectiveRespectStyle =
     SkipDirectiveRespectStyle.AUTOMATIC_YES,
-    checkers_to_skip: Optional[Set[str]] = None
+    checkers_to_skip: Optional[set[str]] = None
 ) -> SingleLabels:
     """
     Loads and filters the checker config label file available at `path`
@@ -189,7 +189,7 @@ def update_checker_labels(
     updates: SingleLabels,
     skip_directive_handling: SkipDirectiveRespectStyle =
     SkipDirectiveRespectStyle.AUTOMATIC_YES,
-    checkers_to_skip: Optional[Set[str]] = None
+    checkers_to_skip: Optional[set[str]] = None
 ):
     """
     Loads a checker config label file available at `path` and updates the

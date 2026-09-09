@@ -22,7 +22,7 @@ import zlib
 from copy import deepcopy
 from collections import OrderedDict, defaultdict, namedtuple
 from datetime import datetime, timedelta
-from typing import Any, Collection, Dict, List, Optional, Set, Tuple
+from typing import Any, Collection, Optional
 
 import sqlalchemy
 from sqlalchemy.sql.expression import or_, and_, not_, func, \
@@ -156,7 +156,7 @@ def slugify(text):
 
 def get_component_values(
     component: SourceComponent
-) -> Tuple[List[str], List[str]]:
+) -> tuple[list[str], list[str]]:
     """
     Returns a tuple where the first item contains a list paths that should be
     included and the second item contains a list of paths that should be
@@ -528,8 +528,8 @@ def filter_open_reports_in_tags_old(results, run_ids, tag_ids):
 
 
 def get_include_skip_queries(
-    include: List[str],
-    skip: List[str]
+    include: list[str],
+    skip: list[str]
 ):
     """ Get queries for include and skip values of a component.
 
@@ -562,7 +562,7 @@ def get_source_component_file_query(
 def get_reports_by_bugpath_filter_for_single_origin(
     session: SA_Session,
     file_filter_q
-) -> Set[int]:
+) -> set[int]:
     """
     This function returns a query for report IDs that are fully contained
     within the files specified by the file_filter_q query."""
@@ -596,7 +596,7 @@ def get_reports_by_bugpath_filter_for_single_origin(
 def get_reports_by_bugpath_filter(
     session: SA_Session,
     file_filter_q
-) -> Set[int]:
+) -> set[int]:
     """
     This function returns a query for report IDs that are related to any file
     described by the query in the second parameter, either because their bug
@@ -618,8 +618,8 @@ def get_reports_by_bugpath_filter(
 
 
 def get_reports_by_components(session: SA_Session,
-                              component_names: List[str],
-                              single_origin: bool) -> Set[int]:
+                              component_names: list[str],
+                              single_origin: bool) -> set[int]:
     """
     This function returns a set of report IDs that are related to any component
     in the second parameter, either because their bug path goes through these
@@ -633,7 +633,7 @@ def get_reports_by_components(session: SA_Session,
     return get_reports_by_bugpath_filter(session, source_component_filter)
 
 
-def get_reports_by_files(session, files: List[str]) -> Set[int]:
+def get_reports_by_files(session, files: list[str]) -> set[int]:
     """
     This function returns a set of report IDs that are related to any file in
     the second parameter, either because their bug path goes through these
@@ -876,8 +876,8 @@ def process_run_filter(session, query, run_filter):
 
 def get_report_details(
     session: SA_Session,
-    report_ids: List[int]
-) -> Dict[int, ReportDetails]:
+    report_ids: list[int]
+) -> dict[int, ReportDetails]:
     """
     Returns report details for the given report ids.
     """
@@ -1026,8 +1026,8 @@ def create_review_data(
 
 
 def apply_report_filter(q, filter_expression,
-                        join_tables: List[Any],
-                        already_joined_tables: Optional[List[Any]] = None):
+                        join_tables: list[Any],
+                        already_joined_tables: Optional[list[Any]] = None):
     """
     Applies the given filter expression and joins the Checker, File, Run, and
     RunHistory tables if necessary based on join_tables parameter. If a table
@@ -1223,7 +1223,7 @@ def get_analysis_statistics_query(session, run_ids, run_history_ids=None):
 
 def get_commit_url(
     remote_url: Optional[str],
-    git_commit_urls: List
+    git_commit_urls: list
 ) -> Optional[str]:
     """ Get commit url for the given remote url. """
     if not remote_url:
@@ -1259,8 +1259,8 @@ def get_cleanup_plan(session, cleanup_plan_id: int) -> CleanupPlan:
 
 def get_cleanup_plan_report_hashes(
     session,
-    cleanup_plan_ids: List[int]
-) -> Dict[int, List[str]]:
+    cleanup_plan_ids: list[int]
+) -> dict[int, list[str]]:
     """ Get report hashes for the given cleanup plan ids. """
     cleanup_plan_hashes = defaultdict(list)
 
@@ -1873,7 +1873,7 @@ class ThriftRequestHandler:
         """ Get analysis information based on the given filter. """
         self.__require_view()
 
-        res: List[ttypes.AnalysisInfo] = []
+        res: list[ttypes.AnalysisInfo] = []
         if not analysis_info_filter:
             return res
 
@@ -1926,7 +1926,7 @@ class ThriftRequestHandler:
                         .filter(CheckerSetItem.checker_set_id ==
                                 cmd.checker_set_id)
 
-                    checkers: Dict[str, Dict[str, API_AnalysisInfoChecker]] = \
+                    checkers: dict[str, dict[str, API_AnalysisInfoChecker]] = \
                         defaultdict(dict)
                     for chk in checkers_q.all():
                         analyzer, checker, enabled = chk
@@ -3084,8 +3084,8 @@ class ThriftRequestHandler:
     @timeit
     def getCheckerLabels(
         self,
-        checkers: List[ttypes.Checker]
-    ) -> List[List[str]]:
+        checkers: list[ttypes.Checker]
+    ) -> list[list[str]]:
         """ Return the list of labels to each checker. """
         self.__require_view()
 
@@ -3108,7 +3108,7 @@ class ThriftRequestHandler:
     @timeit
     def getGuidelineRules(
         self,
-        guidelines: List[ttypes.Guideline]
+        guidelines: list[ttypes.Guideline]
     ):
         """ Return the list of rules to each guideline that given. """
         self.__require_view()
@@ -4452,7 +4452,7 @@ class ThriftRequestHandler:
                      version: str,
                      b64zip: str,
                      force: bool,
-                     trim_path_prefixes: Optional[List[str]],
+                     trim_path_prefixes: Optional[list[str]],
                      description: Optional[str]) -> int:
         store_opts = SubmittedRunOptions(runName=name,
                                          tag=tag,

@@ -8,7 +8,7 @@
 
 """ Convert between Report type and thrift ReportData type. """
 
-from typing import Callable, List
+from typing import Callable
 
 from codechecker_api.codeCheckerDBAccess_v6.ttypes import \
     ExtendedReportDataType, ReportData, Severity
@@ -25,10 +25,10 @@ def to_report(
     severity = Severity._VALUES_TO_NAMES[report.severity] \
         if report.severity else 'UNSPECIFIED'
 
-    bug_path_events: List[BugPathEvent] = []
-    bug_path_positions: List[BugPathPosition] = []
-    notes: List[BugPathEvent] = []
-    macro_expansions: List[MacroExpansion] = []
+    bug_path_events: list[BugPathEvent] = []
+    bug_path_positions: list[BugPathPosition] = []
+    notes: list[BugPathEvent] = []
+    macro_expansions: list[MacroExpansion] = []
 
     details = report.details
     if details:

@@ -7,8 +7,6 @@
 # -------------------------------------------------------------------------
 
 import logging
-from typing import List
-
 from codechecker_report_converter.report import Report
 from codechecker_report_converter.report.parser import sarif
 
@@ -37,7 +35,7 @@ report-converter -t gcc -o ./codechecker_gcc_reports my_file.cpp.sarif
 # Store the gcc reports with CodeChecker.
 CodeChecker store ./codechecker_gcc_reports -n gcc"""
 
-    def get_reports(self, file_path: str) -> List[Report]:
+    def get_reports(self, file_path: str) -> list[Report]:
         """ Get reports from the given analyzer result file. """
 
         return sarif.Parser().get_reports(file_path)

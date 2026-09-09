@@ -10,7 +10,7 @@ Contains housekeeping routines that are used to remove expired, obsolete,
 or dangling records from the database.
 """
 from datetime import datetime, timedelta
-from typing import Dict, Optional
+from typing import Optional
 
 import sqlalchemy
 from sqlalchemy.orm import sessionmaker
@@ -293,7 +293,7 @@ def upgrade_severity_levels(product, checker_labels):
                                     analyzer, checker,
                                     old_severity, old_severity_db)
 
-                        new_sev_attempts: Dict[str, str] = {
+                        new_sev_attempts: dict[str, str] = {
                             chk_name: severity
                             for chk_name, severity in
                             ((name_attempt,

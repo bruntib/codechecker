@@ -10,7 +10,7 @@ import logging
 import os
 
 from abc import ABCMeta, abstractmethod
-from typing import Dict, Iterable, Iterator, List, Optional, Tuple
+from typing import Iterable, Iterator, Optional
 
 from codechecker_report_converter.report import File, Report
 
@@ -30,10 +30,10 @@ class BaseParser(metaclass=ABCMeta):
     """ Warning message parser. """
 
     def __init__(self):
-        self.reports: List[Report] = []
-        self._file_cache: Dict[str, File] = {}
+        self.reports: list[Report] = []
+        self._file_cache: dict[str, File] = {}
 
-    def get_reports(self, file_path: str) -> List[Report]:
+    def get_reports(self, file_path: str) -> list[Report]:
         """ Parse the given output. """
         lines = self._get_analyzer_result_file_content(file_path)
         if not lines:
@@ -41,7 +41,7 @@ class BaseParser(metaclass=ABCMeta):
 
         return self.get_reports_from_iter(lines)
 
-    def get_reports_from_iter(self, lines: Iterable[str]) -> List[Report]:
+    def get_reports_from_iter(self, lines: Iterable[str]) -> list[Report]:
         """ Parse the given output lines. """
         it = iter(lines)
         try:
@@ -58,7 +58,7 @@ class BaseParser(metaclass=ABCMeta):
     def _get_analyzer_result_file_content(
         self,
         result_file_path: str
-    ) -> Optional[List[str]]:
+    ) -> Optional[list[str]]:
         """ Return the content of the given file. """
         if not os.path.exists(result_file_path):
             LOG.error("Result file does not exists: %s", result_file_path)
@@ -78,6 +78,6 @@ class BaseParser(metaclass=ABCMeta):
         self,
         it: Iterator[str],
         line: str
-    ) -> Tuple[List[Report], str]:
+    ) -> tuple[list[Report], str]:
         """ Parse the given line. """
         raise NotImplementedError("Subclasses should implement this!")

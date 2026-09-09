@@ -15,7 +15,7 @@ import json
 import os
 import sys
 import time
-from typing import Callable, Dict, List, Optional, Tuple, cast
+from typing import Callable, Optional, cast
 
 from codechecker_api_shared.ttypes import Ternary
 from codechecker_api.ProductManagement_v6.ttypes import Product
@@ -61,7 +61,7 @@ def await_task_termination(
     timeout_from_last_task_progress: Optional[timedelta] = timedelta(hours=1),
     max_consecutive_request_failures: Optional[int] = 10,
     task_api_client: Optional[ThriftServersideTaskHelper] = None,
-    server_address: Optional[Tuple[str, str, str]] = None,
+    server_address: Optional[tuple[str, str, str]] = None,
 ) -> str:
     """
     Blocks the execution of the current process until the task specified by
@@ -233,7 +233,7 @@ def _datetime_to_str(d: Optional[datetime]) -> Optional[str]:
 
 
 def _build_filter(args: Namespace,
-                  product_id_to_endpoint: Dict[int, str],
+                  product_id_to_endpoint: dict[int, str],
                   get_product_api: Callable[[], ThriftProductHelper]) \
         -> Optional[TaskFilter]:
     """Build a `TaskFilter` from the command-line `args`."""
@@ -261,8 +261,8 @@ def _build_filter(args: Namespace,
         # API works with product IDs.
         def _get_product_id_or_log(endpoint: str) -> Optional[int]:
             try:
-                products: List[Product] = cast(
-                    List[Product],
+                products: list[Product] = cast(
+                    list[Product],
                     get_product_api().getProducts(endpoint, None, None, None,
                                                   None))
                 # Endpoints substring-match.
@@ -346,8 +346,8 @@ def _unapi_admin_info(ati: AdministratorTaskInfo) -> dict:
 
 
 def _transform_product_ids_to_endpoints(
-    task_infos: List[dict],
-    product_id_to_endpoint: Dict[int, str],
+    task_infos: list[dict],
+    product_id_to_endpoint: dict[int, str],
     get_product_api: Callable[[], ThriftProductHelper]
 ):
     """Replace ``task_infos[N]["productId"]`` with
@@ -398,7 +398,7 @@ def handle_tasks(args: Namespace) -> int:
     # if products are being put into a request filter, or product-specific
     # tasks appear on the output.
     product_api: Optional[ThriftProductHelper] = None
-    product_id_to_endpoint: Dict[int, str] = {}
+    product_id_to_endpoint: dict[int, str] = {}
 
     def get_product_api() -> ThriftProductHelper:
         nonlocal product_api
@@ -406,7 +406,7 @@ def handle_tasks(args: Namespace) -> int:
             product_api = setup_product_client(protocol, host, port)
         return product_api
 
-    tokens_of_tasks: List[str] = []
+    tokens_of_tasks: list[str] = []
     task_filter = _build_filter(args,
                                 product_id_to_endpoint,
                                 get_product_api)
@@ -415,7 +415,7 @@ def handle_tasks(args: Namespace) -> int:
         # be part of the filter.
         task_filter.tokens = args.token
 
-        admin_task_infos: List[AdministratorTaskInfo] = \
+        admin_task_infos: list[AdministratorTaskInfo] = \
             api.getTasks(task_filter)
 
         # Save the tokens of matched tasks for later, in case we have to do
@@ -467,7 +467,7 @@ def handle_tasks(args: Namespace) -> int:
             sys.exit(2)  # Simulate argparse error code.
 
         # Otherwise, query the tasks, and print their info.
-        task_infos: List[TaskInfo] = [api.getTaskInfo(token)
+        task_infos: list[TaskInfo] = [api.getTaskInfo(token)
                                       for token in args.token]
         if not task_infos:
             LOG.error("No tasks retrieved for the specified tokens!")

@@ -6,7 +6,7 @@
 #
 # -------------------------------------------------------------------------
 import os
-from typing import DefaultDict, Dict, Iterable
+from typing import Iterable
 from collections import defaultdict
 
 from codechecker_common.util import load_yaml
@@ -59,7 +59,7 @@ class Guidelines:
     def __union_guideline_files(
         self,
         guideline_files: Iterable[str]
-    ) -> DefaultDict[str, Dict[str, Dict[str, str]]]:
+    ) -> defaultdict[str, dict[str, dict[str, str]]]:
         """
         This function creates a union object of the given guideline files. The
         resulting object maps guidelines to the collection of their rules.
@@ -79,8 +79,8 @@ class Guidelines:
             },
         }
         """
-        all_rules: DefaultDict[
-            str, Dict[str, Dict[str, str]]] = defaultdict(dict)
+        all_rules: defaultdict[
+            str, dict[str, dict[str, str]]] = defaultdict(dict)
 
         for guideline_file in guideline_files:
             guideline_data = load_yaml(guideline_file)
@@ -102,7 +102,7 @@ class Guidelines:
     def rules_of_guideline(
         self,
         guideline_name: str,
-    ) -> Dict[str, Dict[str, str]]:
+    ) -> dict[str, dict[str, str]]:
         """
         Return the list of rules of a guideline.
         """
@@ -113,5 +113,5 @@ class Guidelines:
 
     def all_guideline_rules(
         self
-    ) -> DefaultDict[str, Dict[str, Dict[str, str]]]:
+    ) -> defaultdict[str, dict[str, dict[str, str]]]:
         return self.__all_rules

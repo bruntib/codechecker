@@ -15,7 +15,7 @@ import os
 import shutil
 import unittest
 import time
-from typing import List, Optional, cast
+from typing import Optional, cast
 
 import multiprocess
 
@@ -219,7 +219,7 @@ class TaskManagementAPITests(unittest.TestCase):
             ))
 
         # PRODUCT_ADMIN rights on test-specific product...
-        task_infos: List[AdministratorTaskInfo] = \
+        task_infos: list[AdministratorTaskInfo] = \
             self._admin_task_client.getTasks(TaskFilter(productIDs=[2]))
         # ... but no product-specific tasks exist in this test suite.
         self.assertEqual(len(task_infos), 0)
@@ -240,7 +240,7 @@ class TaskManagementAPITests(unittest.TestCase):
     def test_task_5_info_query_filters(self):
         current_time_epoch = int(datetime.now(timezone.utc).timestamp())
 
-        task_infos: List[AdministratorTaskInfo] = \
+        task_infos: list[AdministratorTaskInfo] = \
             self._privileged_task_client.getTasks(TaskFilter(
                 machineIDs=["nonexistent"]
             ))
@@ -443,7 +443,7 @@ class TaskManagementAPITests(unittest.TestCase):
         after_shutdown_time_epoch = int(datetime.now(timezone.utc)
                                         .timestamp())
 
-        task_infos: List[AdministratorTaskInfo] = \
+        task_infos: list[AdministratorTaskInfo] = \
             self._privileged_task_client.getTasks(TaskFilter(
                 enqueuedAfterEpoch=current_time_epoch,
                 statuses=[

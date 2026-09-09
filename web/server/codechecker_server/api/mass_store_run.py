@@ -23,8 +23,8 @@ import sqlalchemy
 from sqlalchemy.orm import Session as SA_Session
 import tempfile
 import time
-from typing import Any, Callable, Dict, List, NoReturn, \
-    Optional, Set, Tuple, Union, cast
+from typing import Any, Callable, NoReturn, \
+    Optional, Union, cast
 import zipfile
 import zlib
 
@@ -409,7 +409,7 @@ def add_file_record(
 
 def get_blame_file_data(
     blame_file: Path
-) -> Tuple[Optional[str], Optional[str], Optional[str]]:
+) -> tuple[Optional[str], Optional[str], Optional[str]]:
     """
     Get blame information from the given file.
 
@@ -435,7 +435,7 @@ def get_blame_file_data(
     return blame_info, remote_url, tracking_branch
 
 
-def checker_name_for_report(report: Report) -> Tuple[str, str]:
+def checker_name_for_report(report: Report) -> tuple[str, str]:
     return (report.analyzer_name or UnknownChecker[0],
             report.checker_name or UnknownChecker[1])
 
@@ -462,7 +462,7 @@ class MassStoreRunInputHandler:
                  store_tag: Optional[str],
                  client_version: str,
                  force_overwrite_of_run: bool,
-                 path_prefixes_to_trim: Optional[List[str]],
+                 path_prefixes_to_trim: Optional[list[str]],
                  zipfile_contents_base64: str,
                  user_name: str):
         self._input_handling_start_time = time.time()
@@ -702,7 +702,7 @@ class MassStoreRun:
                  tag: Optional[str],
                  version: Optional[str],
                  force: bool,
-                 trim_path_prefix_list: Optional[List[str]],
+                 trim_path_prefix_list: Optional[list[str]],
                  description: Optional[str],
                  user_name: str,
                  ):
@@ -719,21 +719,21 @@ class MassStoreRun:
         self.__product = product
         self.__graceful_cancel_if_requested = graceful_cancel
 
-        self.__mips: Dict[str, MetadataInfoParser] = {}
-        self.__analysis_info: Dict[str, AnalysisInfo] = {}
-        self.__checker_row_cache: Dict[Tuple[str, str], Checker] = {}
+        self.__mips: dict[str, MetadataInfoParser] = {}
+        self.__analysis_info: dict[str, AnalysisInfo] = {}
+        self.__checker_row_cache: dict[tuple[str, str], Checker] = {}
         self.__duration: int = 0
         self.__report_count: int = 0
         self.__report_limit: int = 0
-        self.__wrong_src_code_comments: List[str] = []
-        self.__already_added_report_hashes: Set[str] = set()
-        self.__new_report_hashes: Dict[str, Tuple] = {}
-        self.__all_report_checkers: Set[str] = set()
-        self.__added_reports: List[Tuple[DBReport, Report]] = []
-        self.__reports_with_fake_checkers: Dict[
+        self.__wrong_src_code_comments: list[str] = []
+        self.__already_added_report_hashes: set[str] = set()
+        self.__new_report_hashes: dict[str, tuple] = {}
+        self.__all_report_checkers: set[str] = set()
+        self.__added_reports: list[tuple[DBReport, Report]] = []
+        self.__reports_with_fake_checkers: dict[
             # Either a DBReport *without* an ID, or the ID of a committed
             # DBReport.
-            str, Tuple[Report, Union[DBReport, int]]] = {}
+            str, tuple[Report, Union[DBReport, int]]] = {}
 
         with DBSession(config_db) as session:
             product = session.get(Product, self.__product.id)
@@ -742,8 +742,8 @@ class MassStoreRun:
     def __store_source_files(
         self,
         source_root: Path,
-        filename_to_hash: Dict[str, str]
-    ) -> Dict[str, int]:
+        filename_to_hash: dict[str, str]
+    ) -> dict[str, int]:
         """ Storing file contents from plist. """
         file_path_to_id = {}
 
@@ -791,7 +791,7 @@ class MassStoreRun:
     def __add_blame_info(
         self,
         blame_root: Path,
-        filename_to_hash: Dict[str, str]
+        filename_to_hash: dict[str, str]
     ):
         """
         This function updates blame info in File and FileContent tables if
@@ -893,7 +893,7 @@ class MassStoreRun:
 
         return content_hash
 
-    def __store_checker_identifiers(self, checkers: Set[Tuple[str, str]]):
+    def __store_checker_identifiers(self, checkers: set[tuple[str, str]]):
         """
         Stores the identifiers "(analyzer, checker_name)" in the database into
         a look-up table where each unique checker is given a unique numeric
@@ -1055,8 +1055,8 @@ class MassStoreRun:
                     analyzer_command.encode("utf-8"),
                     zlib.Z_BEST_COMPRESSION)
 
-                enabled_checkers: List[int] = []
-                disabled_checkers: List[int] = []
+                enabled_checkers: list[int] = []
+                disabled_checkers: list[int] = []
                 for analyzer in mip.analyzers:
                     q = session \
                         .query(Checker) \
@@ -1127,7 +1127,7 @@ class MassStoreRun:
         self,
         session: DBSession,
         run_history_time: datetime
-    ) -> Tuple[int, bool]:
+    ) -> tuple[int, bool]:
         """
         Store run related data to the database.
         By default updates the results if name already exists.
@@ -1239,7 +1239,7 @@ class MassStoreRun:
         run_id: int,
         report: Report,
         report_path_hash: str,
-        file_path_to_id: Dict[str, int],
+        file_path_to_id: dict[str, int],
         review_status: SourceReviewStatus,
         detection_status: str,
         detection_time: datetime,
@@ -1287,7 +1287,7 @@ class MassStoreRun:
         return db_report.id
 
     def __get_faked_checkers(self) \
-            -> Set[Tuple[str, str]]:
+            -> set[tuple[str, str]]:
         """
         Extracts the "real" checker identifiers from the
         __reports_with_fake_checkers that might contain some yet not fully
@@ -1329,11 +1329,11 @@ class MassStoreRun:
         so all it does is upgrade the 'checker_id' FOREIGN KEY field to point
         at the real checker.
         """
-        grouped_by_checker: Dict[Tuple[str, str], List[int]] = \
+        grouped_by_checker: dict[tuple[str, str], list[int]] = \
             defaultdict(list)
         for _, (report, db_id) in \
                 self.__reports_with_fake_checkers.items():
-            checker: Tuple[str, str] = checker_name_for_report(report)
+            checker: tuple[str, str] = checker_name_for_report(report)
             grouped_by_checker[checker].append(cast(int, db_id))
 
         for checker, report_ids in grouped_by_checker.items():
@@ -1349,7 +1349,7 @@ class MassStoreRun:
     def __add_report_context(
         self,
         session: SA_Session,
-        file_path_to_id: Dict[str, int]
+        file_path_to_id: dict[str, int]
     ):
         path_data_files = []
 
@@ -1431,11 +1431,11 @@ class MassStoreRun:
         report_file_path: str,
         session: DBSession,
         run_id: int,
-        file_path_to_id: Dict[str, int],
+        file_path_to_id: dict[str, int],
         run_history_time: datetime,
         skip_handler: skiplist_handler.SkipListHandler,
         review_status_handler: ReviewStatusHandler,
-        hash_map_reports: Dict[str, List[Any]]
+        hash_map_reports: dict[str, list[Any]]
     ) -> bool:
         """
         Process and save reports from the given report file to the database.
@@ -1445,7 +1445,7 @@ class MassStoreRun:
         if not reports:
             return True
 
-        def get_missing_file_ids(report: Report) -> List[str]:
+        def get_missing_file_ids(report: Report) -> list[str]:
             """ Returns file paths which database file id is missing. """
             missing_ids_for_files = []
             for file_path in report.trimmed_files:
@@ -1539,7 +1539,7 @@ class MassStoreRun:
         self,
         session: DBSession,
         report_id: int,
-        report_annotation: Dict
+        report_annotation: dict
     ):
         """
         This function checks the format of the annotations. For example a
@@ -1595,7 +1595,7 @@ class MassStoreRun:
         report_dir: Path,
         source_root: Path,
         run_id: int,
-        file_path_to_id: Dict[str, int],
+        file_path_to_id: dict[str, int],
         run_history_time: datetime
     ):
         """ Parse up and store the plist report files. """
@@ -1633,8 +1633,8 @@ class MassStoreRun:
         for db_report in all_reports:
             report_to_report_id[db_report.bug_id].append(db_report)
 
-        enabled_checkers: Set[str] = set()
-        disabled_checkers: Set[str] = set()
+        enabled_checkers: set[str] = set()
+        disabled_checkers: set[str] = set()
 
         # Processing analyzer result files.
         processed_result_file_count = 0

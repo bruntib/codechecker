@@ -7,12 +7,10 @@
 # -------------------------------------------------------------------------
 """Codeclimate output helpers."""
 
-from typing import Dict, List
-
 from codechecker_report_converter.report import Report
 
 
-def convert(reports: List[Report]) -> List[Dict]:
+def convert(reports: list[Report]) -> list[dict]:
     """Convert the given reports to codeclimate format.
 
     This function will convert the given report to Code Climate format.
@@ -38,7 +36,7 @@ __codeclimate_severity_map = {
 }
 
 
-def __to_codeclimate(report: Report) -> Dict:
+def __to_codeclimate(report: Report) -> dict:
     """Convert a Report to Code Climate format."""
     severity = __codeclimate_severity_map.get(report.severity) \
         if report.severity else 'info'

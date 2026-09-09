@@ -12,7 +12,7 @@ Utilities for compilation database handling.
 
 import os
 import shlex
-from typing import Callable, Dict, List, Optional
+from typing import Callable, Optional
 
 from codechecker_common.util import load_json
 
@@ -55,7 +55,7 @@ def find_closest_compilation_database(path: str) -> Optional[str]:
     return None
 
 
-def change_args_to_command_in_comp_db(compile_commands: List[Dict]):
+def change_args_to_command_in_comp_db(compile_commands: list[dict]):
     """
     In CodeChecker we support compilation databases where the JSON object of a
     build action contains "file", "directory" and "command" fields. However,
@@ -71,7 +71,7 @@ def change_args_to_command_in_comp_db(compile_commands: List[Dict]):
             del cc['arguments']
 
 
-def find_all_compilation_databases(path: str) -> List[str]:
+def find_all_compilation_databases(path: str) -> list[str]:
     """
     Collect all compilation database paths that may be relevant for the source
     files at the given path. This means compilation databases anywhere under
@@ -99,7 +99,7 @@ def find_all_compilation_databases(path: str) -> List[str]:
     return dirs
 
 
-def build_action_describes_file(file_path: str) -> Callable[[Dict], bool]:
+def build_action_describes_file(file_path: str) -> Callable[[dict], bool]:
     """
     Returns a function which checks whether a build action belongs to the
     given file_path. This returned function can be used for filtering
@@ -121,7 +121,7 @@ def is_c_lang_source_file(source_file_path: str) -> bool:
         os.path.splitext(source_file_path)[1] in C_CPP_OBJC_OBJCPP_EXTS
 
 
-def find_build_actions_for_file(file_path: str) -> List[Dict]:
+def find_build_actions_for_file(file_path: str) -> list[dict]:
     """
     Find the corresponding compilation database belonging to the given
     source file and return a list of build actions that describe its
@@ -137,7 +137,7 @@ def find_build_actions_for_file(file_path: str) -> List[Dict]:
         load_json(comp_db)))
 
 
-def gather_compilation_database(analysis_input: str) -> Optional[List[Dict]]:
+def gather_compilation_database(analysis_input: str) -> Optional[list[dict]]:
     """
     Return a compilation database that describes the build of the given
     analysis_input:
@@ -155,7 +155,7 @@ def gather_compilation_database(analysis_input: str) -> Optional[List[Dict]]:
     doesn't have a compilation database) then None returns.
     """
     def __select_compilation_database(
-        comp_db_paths: List[str],
+        comp_db_paths: list[str],
         source_file: str
     ) -> Optional[str]:
         """

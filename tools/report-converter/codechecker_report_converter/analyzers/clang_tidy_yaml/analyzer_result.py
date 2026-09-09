@@ -6,8 +6,6 @@
 #
 # -------------------------------------------------------------------------
 
-from typing import List
-
 from codechecker_report_converter.report import Report
 from codechecker_report_converter.report.hash import get_report_hash, HashType
 
@@ -34,7 +32,7 @@ report-converter -t clang-tidy-yaml \
 # Store the clang-tidy reports with CodeChecker.
 CodeChecker store ./codechecker_clang_tidy_reports -n clang-tidy"""
 
-    def get_reports(self, file_path: str) -> List[Report]:
+    def get_reports(self, file_path: str) -> list[Report]:
         """ Get reports from the given analyzer result. """
         return Parser().get_reports(file_path)
 

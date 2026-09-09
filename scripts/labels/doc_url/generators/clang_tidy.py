@@ -6,7 +6,7 @@
 #
 # -------------------------------------------------------------------------
 """Clang-Tidy."""
-from typing import Iterable, Optional, Tuple
+from typing import Iterable, Optional
 
 from ... import http_ as http
 from .base import Base
@@ -31,7 +31,7 @@ class ClangTidyGenerator(Base):
         return checker.startswith("clang-diagnostic") \
             or checker.startswith("clang-analyzer")
 
-    def generate(self) -> Iterable[Tuple[str, Optional[str]]]:
+    def generate(self) -> Iterable[tuple[str, Optional[str]]]:
         dom = self._http.get_dom(self.toc_url)
         if dom is None:
             return iter(())

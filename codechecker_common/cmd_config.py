@@ -9,8 +9,6 @@
 import os
 import yaml
 
-from typing import List
-
 from codechecker_common import logger
 from codechecker_common.util import load_json
 
@@ -33,7 +31,7 @@ def add_option(parser):
                              "master/docs/config_file.md")
 
 
-def get_analyze_options(cfg) -> List[str]:
+def get_analyze_options(cfg) -> list[str]:
     """ Get analyze related options. """
     # The config value can be 'analyze' or 'analyzer'
     # for backward compatibility.

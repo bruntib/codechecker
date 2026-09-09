@@ -13,8 +13,6 @@ import subprocess
 import sys
 from multiprocess import Pool
 from pathlib import Path
-from typing import List, Tuple
-
 
 def parse_args():
     """
@@ -50,7 +48,7 @@ def parse_args():
     return parser.parse_args()
 
 
-def __get_keys_from_list(out) -> List[str]:
+def __get_keys_from_list(out) -> list[str]:
     """
     Get all keys from a JSON list.
     """
@@ -58,7 +56,7 @@ def __get_keys_from_list(out) -> List[str]:
 
 
 def result_getter(args: argparse.Namespace):
-    def get_results(product_run: Tuple[str, str]):
+    def get_results(product_run: tuple[str, str]):
         product, run = product_run
         print(product, run)
 
@@ -80,7 +78,7 @@ def result_getter(args: argparse.Namespace):
     return get_results
 
 
-def get_all_products(url: str) -> List[str]:
+def get_all_products(url: str) -> list[str]:
     """
     Get all products from a CodeChecker server.
 

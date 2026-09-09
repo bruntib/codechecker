@@ -9,8 +9,6 @@
 Argument handlers for the 'CodeChecker cmd permissions' subcommands.
 """
 
-from typing import Dict
-
 from codechecker_api.Authentication_v6.ttypes import AccessControl
 
 from codechecker_common import logger
@@ -29,7 +27,7 @@ def init_logger(level, stream=None, logger_name='system'):
     LOG = logger.get_logger(logger_name)
 
 
-def __convert_permissions(permissions: AccessControl) -> Dict:
+def __convert_permissions(permissions: AccessControl) -> dict:
     """ Convert the given permissions to dictionary. """
     ret = {"user_permissions": {}, "group_permissions": {}}
 

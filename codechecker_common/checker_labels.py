@@ -7,13 +7,13 @@
 # -------------------------------------------------------------------------
 from collections import defaultdict
 import os
-from typing import Any, cast, DefaultDict, Dict, Iterable, List, Optional, \
-    Set, Tuple, Union
+from typing import Any, cast, Iterable, Optional, \
+    Union
 
 from codechecker_common.util import load_json
 
 
-def split_label_kv(key_value: str) -> Tuple[str, str]:
+def split_label_kv(key_value: str) -> tuple[str, str]:
     """
     A label has a value separated by colon (:) character, e.g:
     "severity:high". This function returns this key and value as a tuple.
@@ -68,7 +68,7 @@ class CheckerLabels:
     def __union_label_files(
         self,
         label_files: Iterable[str]
-    ) -> Dict[str, DefaultDict[str, List[str]]]:
+    ) -> dict[str, defaultdict[str, list[str]]]:
         """
         This function creates a union object of the given label files. The
         resulting object maps analyzers to the collection of their checkers
@@ -144,7 +144,7 @@ class CheckerLabels:
     def __get_analyzer_data(
         self,
         analyzer: Optional[str] = None
-    ) -> Iterable[Tuple[str, Any]]:
+    ) -> Iterable[tuple[str, Any]]:
         """
         Most functions of this class require an analyzer name which determines
         a checker name specifically. If no analyzer is given then all of them
@@ -163,7 +163,7 @@ class CheckerLabels:
         self,
         filter_labels: Iterable[str],
         analyzer: Optional[str] = None
-    ) -> List[str]:
+    ) -> list[str]:
         """
         Returns a list of checkers that have at least one of the specified
         labels.
@@ -191,7 +191,7 @@ class CheckerLabels:
         checker: str,
         label: str,
         analyzer: Optional[str] = None
-    ) -> Union[str, List[str]]:
+    ) -> Union[str, list[str]]:
         """
         If a label has unique constraint then this function retuns the value
         that belongs to the given label or the default value that is set among
@@ -228,14 +228,14 @@ class CheckerLabels:
         self,
         checker: str,
         analyzer: Optional[str] = None
-    ) -> List[Tuple[str, str]]:
+    ) -> list[tuple[str, str]]:
         """
         Return the list of labels of a checker. The list contains (label,
         value) pairs. If the checker name is not found in the label config file
         then its prefixes are also searched. For example "clang-diagnostic" in
         the config file matches "clang-diagnostic-unused-argument".
         """
-        labels: List[Tuple[str, str]] = []
+        labels: list[tuple[str, str]] = []
 
         for _, checkers in self.__get_analyzer_data(analyzer):
             c: Optional[str] = checker
@@ -252,13 +252,13 @@ class CheckerLabels:
         # cover this case properly.
         return list(set(labels))
 
-    def get_description(self, label: str) -> Dict[str, str]:
+    def get_description(self, label: str) -> dict[str, str]:
         """
         Returns the descriptions of the given label's values.
         """
         return self.__descriptions.get(label, {})
 
-    def checkers(self, analyzer: Optional[str] = None) -> List[str]:
+    def checkers(self, analyzer: Optional[str] = None) -> list[str]:
         """
         Return the list of available checkers.
         """
@@ -269,11 +269,11 @@ class CheckerLabels:
 
         return collection
 
-    def labels(self, analyzer: Optional[str] = None) -> List[str]:
+    def labels(self, analyzer: Optional[str] = None) -> list[str]:
         """
         Returns a list of occurring labels.
         """
-        collection: Set[str] = set()
+        collection: set[str] = set()
 
         for _, checkers in self.__get_analyzer_data(analyzer):
             for labels in checkers.values():
@@ -286,7 +286,7 @@ class CheckerLabels:
         self,
         label: str,
         analyzer: Optional[str] = None
-    ) -> List[str]:
+    ) -> list[str]:
         """
         Return the list of values belonging to the given label which were used
         for at least one checker.

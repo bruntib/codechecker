@@ -22,7 +22,7 @@ import subprocess
 import sys
 import tempfile
 import traceback
-from typing import Dict, List, Optional, Any
+from typing import Optional, Any
 
 from codechecker_analyzer.analyzers.clangsa.analyzer import ClangSA
 
@@ -345,12 +345,12 @@ class ImplicitCompilerInfo:
             return hash(
                 (self.compiler, self.language, tuple(self.compiler_flags)))
 
-    compiler_info: Dict[ImplicitInfoSpecifierKey, dict] = {}
-    compiler_isexecutable: Dict[str, bool] = {}
+    compiler_info: dict[ImplicitInfoSpecifierKey, dict] = {}
+    compiler_isexecutable: dict[str, bool] = {}
     # Store the already detected compiler version information.
     # If the value is False the compiler is not clang otherwise the value
     # should be a clang version information object.
-    compiler_versions: Dict[str, Any] = {}
+    compiler_versions: dict[str, Any] = {}
 
     @staticmethod
     def is_executable_compiler(compiler: str):
@@ -361,7 +361,7 @@ class ImplicitCompilerInfo:
         return ImplicitCompilerInfo.compiler_isexecutable[compiler]
 
     @staticmethod
-    def __get_compiler_err(cmd: List[str]) -> Optional[str]:
+    def __get_compiler_err(cmd: list[str]) -> Optional[str]:
         """
         Returns the stderr of a compiler invocation as string
         or None in case of error.
@@ -395,7 +395,7 @@ class ImplicitCompilerInfo:
             return None
 
     @staticmethod
-    def __parse_compiler_includes(compile_cmd: List[str]):
+    def __parse_compiler_includes(compile_cmd: list[str]):
         """
         "gcc -v -E -" prints a set of information about the execution of the
         preprocessor. This output contains the implicitly included paths. This
@@ -407,7 +407,7 @@ class ImplicitCompilerInfo:
         start_mark = "#include <...> search starts here:"
         end_mark = "End of search list."
 
-        include_paths: List[str] = []
+        include_paths: list[str] = []
         lines = ImplicitCompilerInfo.__get_compiler_err(compile_cmd)
 
         if not lines:
