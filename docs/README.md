@@ -294,7 +294,7 @@ having to manually activate the environment before running CodeChecker.
 
 ### Minimum Recommended package versions
 
-* In production it is recommended to execute CodeChecker with the minimum Python versions: 3.7.14, 3.8.14, 3.9.14, 3.10.6, 3.11.0, otherwise it may be vulnerable to open-redirect attacks. For more info see https://python-security.readthedocs.io/vuln/http-server-redirection.html (CVE-2021-28861).
+* In production it is recommended to execute CodeChecker with the minimum Python version 3.11.0, otherwise it may be vulnerable to open-redirect attacks. For more info see https://python-security.readthedocs.io/vuln/http-server-redirection.html (CVE-2021-28861).
 
 ### Upgrading environment after system or Python upgrade
 
