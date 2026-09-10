@@ -18,7 +18,7 @@ import subprocess
 import sys
 import shlex
 
-from typing import List, Optional
+from typing import Optional
 
 from codechecker_analyzer import analyzer_context
 from codechecker_common.logger import get_logger
@@ -159,11 +159,11 @@ class SourceAnalyzer(metaclass=ABCMeta):
         raise NotImplementedError("Subclasses should implement this!")
 
     @classmethod
-    def get_analyzer_config(cls) -> List[AnalyzerConfig]:
+    def get_analyzer_config(cls) -> list[AnalyzerConfig]:
         return []
 
     @classmethod
-    def get_checker_config(cls) -> List[CheckerConfig]:
+    def get_checker_config(cls) -> list[CheckerConfig]:
         return []
 
     def post_analyze(self, result_handler):

@@ -13,7 +13,7 @@ import os
 from abc import ABCMeta, abstractmethod
 from collections import defaultdict
 import hashlib
-from typing import Dict, Iterable, List, Optional
+from typing import Iterable, Optional
 
 from codechecker_report_converter.report import Report, report_file
 from codechecker_report_converter.report.hash import get_report_hash, HashType
@@ -50,7 +50,7 @@ class AnalyzerResultBase(metaclass=ABCMeta):
         output_dir_path: str,
         export_type: str,
         file_name: str = "{source_file}_{analyzer}_{file_hash}",
-        metadata: Optional[Dict[str, str]] = None
+        metadata: Optional[dict[str, str]] = None
     ) -> bool:
         """
         Converts the given analyzer result to the output directory in the given
@@ -95,7 +95,7 @@ class AnalyzerResultBase(metaclass=ABCMeta):
         return bool(all_reports)
 
     @abstractmethod
-    def get_reports(self, file_path: str) -> List[Report]:
+    def get_reports(self, file_path: str) -> list[Report]:
         """ Get reports from the given analyzer result. """
         raise NotImplementedError("Subclasses should implement this!")
 
@@ -124,7 +124,7 @@ class AnalyzerResultBase(metaclass=ABCMeta):
                   encoding="utf-8", errors="ignore") as metafile:
             json.dump(meta_info, metafile)
 
-    def _post_process_result(self, reports: List[Report]):
+    def _post_process_result(self, reports: list[Report]):
         """ Post process the parsed result.
 
         By default it will add report hashes and metada information.
@@ -143,7 +143,7 @@ class AnalyzerResultBase(metaclass=ABCMeta):
 
     def _write(
         self,
-        reports: List[Report],
+        reports: list[Report],
         output_dir_path: str,
         parser,
         export_type: str,
@@ -155,7 +155,7 @@ class AnalyzerResultBase(metaclass=ABCMeta):
         """
         output_dir = os.path.abspath(output_dir_path)
 
-        file_to_report: Dict[str, List[Report]] = defaultdict(list)
+        file_to_report: dict[str, list[Report]] = defaultdict(list)
         for report in reports:
             file_path = os.path.normpath(report.file.original_path)
             file_to_report[file_path].append(report)

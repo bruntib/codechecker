@@ -8,7 +8,7 @@
 """
 Selects the appropriate generator engine for the analyser configuration.
 """
-from typing import Dict, Iterable, Tuple, Type, Union
+from typing import Iterable, Union
 
 from .clang_diagnostic import ClangDiagnosticGenerator
 from .clang_tidy import ClangTidyGenerator
@@ -16,14 +16,14 @@ from .clangsa import ClangSAGenerator
 from .markdownlint import MarkdownlintGenerator
 
 
-AnalyserGenerators: Dict[str, Union[Type, Tuple[Type, ...]]] = {
+AnalyserGenerators: dict[str, Union[type, tuple[type, ...]]] = {
     "clangsa": ClangSAGenerator,
     "clang-tidy": (ClangDiagnosticGenerator, ClangTidyGenerator,),
     "mdl": MarkdownlintGenerator,
 }
 
 
-def select_generator(analyser: str) -> Iterable[Type]:
+def select_generator(analyser: str) -> Iterable[type]:
     """
     Dispatches the `analyser` to one of the generator classes and returns
     which class(es) should be used for the label generation.

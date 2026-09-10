@@ -10,7 +10,7 @@
 from collections import defaultdict
 import subprocess
 import sys
-from typing import Iterable, Optional, Tuple
+from typing import Iterable, Optional
 
 import lxml.etree
 
@@ -79,7 +79,7 @@ class CppcheckGenerator(Base):
         }
     )
 
-    def generate(self) -> Iterable[Tuple[str, Optional[str]]]:
+    def generate(self) -> Iterable[tuple[str, Optional[str]]]:
         xml_results = self.fetch_cppcheck_errorlist()
         version = xml_results.find("./cppcheck").get("version")
         trace("Cppcheck version '%s'", version)

@@ -13,8 +13,6 @@ import os
 
 from enum import Enum
 
-from typing import List, Tuple
-
 from codechecker_report_converter.report import Report
 
 LOG = logging.getLogger('report-converter')
@@ -33,7 +31,7 @@ def __str_to_hash(string_to_hash: str, errors: str = 'ignore') -> str:
     return hashlib.md5(string_hash).hexdigest()
 
 
-def _remove_whitespace(line_content: str, old_col: int) -> Tuple[str, int]:
+def _remove_whitespace(line_content: str, old_col: int) -> tuple[str, int]:
     """
     This function removes white spaces from the line content parameter and
     calculates the new line location.
@@ -59,7 +57,7 @@ def _remove_whitespace(line_content: str, old_col: int) -> Tuple[str, int]:
            old_col - line_strip_len
 
 
-def __get_report_hash_path_sensitive(report: Report) -> List[str]:
+def __get_report_hash_path_sensitive(report: Report) -> list[str]:
     """ Report hash generation from the given report.
 
     High level overview of the hash content:
@@ -106,7 +104,7 @@ def __get_report_hash_path_sensitive(report: Report) -> List[str]:
         return []
 
 
-def __get_report_hash_context_free(report: Report) -> List[str]:
+def __get_report_hash_context_free(report: Report) -> list[str]:
     """ Generate report hash without bug path.
 
     !!! NOT Compatible with the old hash generation method
@@ -152,7 +150,7 @@ def __get_report_hash_context_free(report: Report) -> List[str]:
         return []
 
 
-def __get_report_hash_diagnostic_message(report: Report) -> List[str]:
+def __get_report_hash_diagnostic_message(report: Report) -> list[str]:
     """ Generate report hash with bug path messages.
 
     The hash will contain the same information as the CONTEXT_FREE hash +

@@ -29,7 +29,7 @@ from collections import defaultdict, namedtuple
 from contextlib import contextmanager, nullcontext
 from datetime import timedelta
 from threading import Timer
-from typing import Dict, Iterable, List, Set, Tuple
+from typing import Iterable
 
 from codechecker_api.codeCheckerDBAccess_v6.ttypes import \
     StoreLimitKind, SubmittedRunOptions
@@ -68,10 +68,10 @@ LOG = logger.get_logger('system')
 MAX_UPLOAD_SIZE = 1024 ** 3  # 1024^3 = 1 GiB.
 
 
-AnalyzerResultFileReports = Dict[str, List[Report]]
+AnalyzerResultFileReports = dict[str, list[Report]]
 
 
-FileReportPositions = Dict[str, Set[int]]
+FileReportPositions = dict[str, set[int]]
 
 
 """Minimal required information for a report position in a source file.
@@ -366,7 +366,7 @@ def __get_run_name(input_list):
     return False
 
 
-def scan_for_review_comment(job: Tuple[str, Iterable[int]]):
+def scan_for_review_comment(job: tuple[str, Iterable[int]]):
     """Scan a file for review comments returns
     all the found review comments.
     """
@@ -386,7 +386,7 @@ def scan_for_review_comment(job: Tuple[str, Iterable[int]]):
     return comments
 
 
-def get_source_file_with_comments(jobs, zip_iter=map) -> Set[str]:
+def get_source_file_with_comments(jobs, zip_iter=map) -> set[str]:
     """
     Get source files where there is any codechecker review comment at the main
     report positions.
@@ -403,7 +403,7 @@ def get_source_file_with_comments(jobs, zip_iter=map) -> Set[str]:
 
 def filter_source_files_with_comments(
     file_report_positions: FileReportPositions
-) -> Set[str]:
+) -> set[str]:
     """ Collect the source files where there is any codechecker review
     comment at the main report positions.
     """
@@ -416,7 +416,7 @@ def filter_source_files_with_comments(
 def get_reports(
     analyzer_result_file_path: str,
     checker_labels: CheckerLabels
-) -> List[Report]:
+) -> list[Report]:
     """ Get reports from the given analyzer result file. """
     reports = report_file.get_reports(
         analyzer_result_file_path, checker_labels)
@@ -480,7 +480,7 @@ def assemble_zip(inputs,
     report directory to store could have been made with different
     configurations, so we can't merge them all into a single zip.
     """
-    files_to_compress: Dict[str, set] = defaultdict(set)
+    files_to_compress: dict[str, set] = defaultdict(set)
     analyzer_result_file_paths = []
     stats = StorageZipStatistics()
 
@@ -521,7 +521,7 @@ def assemble_zip(inputs,
     changed_files = set()
     file_paths = set()
     file_report_positions: FileReportPositions = defaultdict(set)
-    unique_reports: Dict[str, Dict[str, List[Report]]] = defaultdict(dict)
+    unique_reports: dict[str, dict[str, list[Report]]] = defaultdict(dict)
 
     unique_report_hashes = set()
     for file_path, reports in analyzer_result_file_reports.items():
@@ -567,10 +567,10 @@ def assemble_zip(inputs,
         LOG.warning("There is no report to store. After uploading these "
                     "results the previous reports become resolved.")
 
-    hash_to_file: Dict[str, str] = {}
+    hash_to_file: dict[str, str] = {}
 
     # There can be files with same hash, but different path.
-    file_to_hash: Dict[str, str] = {}
+    file_to_hash: dict[str, str] = {}
 
     for file_path in file_paths:
         h = get_file_content_hash(file_path)

@@ -13,7 +13,7 @@ import os
 import sys
 
 from collections import defaultdict
-from typing import Dict, List, Optional, Set
+from typing import Optional
 
 from codechecker_report_converter.report import BugPathEvent, \
     InvalidFileContentMsg, MacroExpansion, Report
@@ -24,7 +24,7 @@ LOG = logging.getLogger('report-converter')
 
 def __get_source_file_for_analyzer_result_file(
     analyzer_result_file_path: str,
-    metadata: Optional[Dict]
+    metadata: Optional[dict]
 ) -> Optional[str]:
     """ Get source file for the given analyzer result file. """
     if not metadata:
@@ -90,7 +90,7 @@ def format_event(event: BugPathEvent) -> str:
     return f"{file_name}:{event.line}:{event.column}: {event.message}"
 
 
-def get_index_format(lst: List) -> str:
+def get_index_format(lst: list) -> str:
     """ Get index format. """
     return f'    %{int(math.floor(math.log10(len(lst))) + 1)}d, '
 
@@ -124,10 +124,10 @@ def print_details(report: Report, output=sys.stdout):
 
 
 def get_file_report_map(
-    reports: List[Report],
+    reports: list[Report],
     input_file_path: Optional[str] = None,
-    metadata: Optional[Dict] = None
-) -> Dict[str, List[Report]]:
+    metadata: Optional[dict] = None
+) -> dict[str, list[Report]]:
     """ Get file report map. """
     file_report_map = defaultdict(list)
     for report in reports:
@@ -149,8 +149,8 @@ def get_file_report_map(
 
 def convert(
     review_status_handler,
-    source_file_report_map: Dict[str, List[Report]],
-    processed_file_paths: Optional[Set[str]] = None,
+    source_file_report_map: dict[str, list[Report]],
+    processed_file_paths: Optional[set[str]] = None,
     print_steps: bool = False,
     output=sys.stdout
 ):

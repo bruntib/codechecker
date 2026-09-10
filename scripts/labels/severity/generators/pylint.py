@@ -9,7 +9,7 @@
 from collections import defaultdict
 import re
 import subprocess
-from typing import Iterable, Optional, Tuple
+from typing import Iterable, Optional
 
 from ...exception import EngineError
 from ...output import trace
@@ -68,7 +68,7 @@ class PylintGenerator(Base):
 
     pattern = re.compile(r"^:(?P<name>[^ ]+) \((?P<kind>\S)(?P<id>\S+)\): .*")
 
-    def generate(self) -> Iterable[Tuple[str, Optional[str]]]:
+    def generate(self) -> Iterable[tuple[str, Optional[str]]]:
         msgs = self.fetch_pylint_msgs()
         for line in msgs.split('\n'):
             match = self.pattern.match(line)

@@ -8,7 +8,7 @@
 """
 Helper for the "serverside tasks" Thrift API.
 """
-from typing import Callable, List, Optional
+from typing import Callable, Optional
 
 from codechecker_api.codeCheckerServersideTasks_v6 import \
     codeCheckerServersideTaskService
@@ -37,7 +37,7 @@ class ThriftServersideTaskHelper(BaseClientHelper):
         raise NotImplementedError("Should have called Thrift code!")
 
     @thrift_client_call
-    def getTasks(self, _filters: TaskFilter) -> List[AdministratorTaskInfo]:
+    def getTasks(self, _filters: TaskFilter) -> list[AdministratorTaskInfo]:
         raise NotImplementedError("Should have called Thrift code!")
 
     @thrift_client_call

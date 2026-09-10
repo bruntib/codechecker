@@ -6,7 +6,7 @@
 #
 # -------------------------------------------------------------------------
 """Markdownlint."""
-from typing import Iterable, Optional, Tuple
+from typing import Iterable, Optional
 
 from ... import http_ as http
 from ...exception import EngineError
@@ -25,7 +25,7 @@ class MarkdownlintGenerator(Base):
         super().__init__(analyser=analyser)
         self._http = http.HTMLAcquirer()
 
-    def generate(self) -> Iterable[Tuple[str, Optional[str]]]:
+    def generate(self) -> Iterable[tuple[str, Optional[str]]]:
         try:
             version = markdownlint.get_markdownlint_latest_release(self._http)
         except Exception as e:

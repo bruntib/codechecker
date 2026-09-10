@@ -8,7 +8,7 @@
 """
 Describes the base interface for the generation of severity labels.
 """
-from typing import Iterable, Optional, Tuple
+from typing import Iterable, Optional
 
 
 class Base:
@@ -24,7 +24,7 @@ class Base:
         """
         return False
 
-    def generate(self) -> Iterable[Tuple[str, Optional[str]]]:
+    def generate(self) -> Iterable[tuple[str, Optional[str]]]:
         """
         Returns a generator that can be consumed in order to obtain
         ``(checker, severity)`` pairs, one for each encountered checker.

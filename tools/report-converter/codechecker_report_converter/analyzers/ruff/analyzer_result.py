@@ -10,8 +10,6 @@ import json
 import logging
 import os
 
-from typing import Dict, List
-
 from codechecker_report_converter.report import File, get_or_create_file, \
     Report
 
@@ -38,9 +36,9 @@ report-converter -t ruff -o ./codechecker_ruff_reports ./ruff_reports.json
 # Store the ruff reports with CodeChecker.
 CodeChecker store ./codechecker_ruff_reports -n ruff"""
 
-    def get_reports(self, file_path: str) -> List[Report]:
+    def get_reports(self, file_path: str) -> list[Report]:
         """ Get reports from the given analyzer result. """
-        reports: List[Report] = []
+        reports: list[Report] = []
 
         if not os.path.exists(file_path):
             LOG.error("Report file does not exist: %s", file_path)
@@ -56,7 +54,7 @@ CodeChecker store ./codechecker_ruff_reports -n ruff"""
                       file_path)
             return reports
 
-        file_cache: Dict[str, File] = {}
+        file_cache: dict[str, File] = {}
         for bug in bugs:
             fp = bug.get('filename')
             # Ruff uses absolute file names per default.

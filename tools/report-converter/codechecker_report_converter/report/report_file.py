@@ -9,7 +9,7 @@
 import logging
 import os
 
-from typing import Dict, Iterator, List, Optional, Tuple
+from typing import Iterator, Optional
 
 from codechecker_report_converter.report import File, Report
 from codechecker_report_converter.report.checker_labels import CheckerLabels
@@ -36,7 +36,7 @@ def is_supported(analyzer_result_file_path: str) -> bool:
 def get_parser(
     analyzer_result_file_path: str,
     checker_labels: Optional[CheckerLabels] = None,
-    file_cache: Optional[Dict[str, File]] = None
+    file_cache: Optional[dict[str, File]] = None
 ):
     """ Returns a parser object for the given analyzer result file. """
     # FIXME: It would be more elegant to collect these modules (plist, sarif,
@@ -53,9 +53,9 @@ def get_parser(
 def get_reports(
     analyzer_result_file_path: str,
     checker_labels: Optional[CheckerLabels] = None,
-    file_cache: Optional[Dict[str, File]] = None,
+    file_cache: Optional[dict[str, File]] = None,
     source_dir_path: Optional[str] = None
-) -> List[Report]:
+) -> list[Report]:
     """ Get reports from the given report file. """
     parser = get_parser(analyzer_result_file_path, checker_labels, file_cache)
 
@@ -72,7 +72,7 @@ def get_reports(
 
 def create(
     output_file_path: str,
-    reports: List[Report],
+    reports: list[Report],
     checker_labels: Optional[CheckerLabels] = None,
     analyzer_info: Optional[AnalyzerInfo] = None
 ):
@@ -97,8 +97,8 @@ def replace_report_hash(
 
 
 def analyzer_result_files(
-    input_paths: List[str]
-) -> Iterator[Tuple[str, List[str]]]:
+    input_paths: list[str]
+) -> Iterator[tuple[str, list[str]]]:
     """
     Iterate over the input paths and returns an iterator of the supported
     analyzer result file paths and metadata information if available.
@@ -114,7 +114,7 @@ def analyzer_result_files(
         elif os.path.isdir(input_path):
             input_dir_path = input_path
             for root_dir, _, file_names in os.walk(input_path):
-                analyzer_result_file_paths: List[str] = []
+                analyzer_result_file_paths: list[str] = []
                 for file_name in file_names:
                     input_file_path = os.path.join(root_dir, file_name)
                     if is_supported(input_file_path):

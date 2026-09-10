@@ -25,7 +25,7 @@ def run_command(
     cmd: Sequence[str],
     cwd: Optional[str] = None,
     env: Optional[Mapping[str, str]] = None,
-) -> Tuple[int, str, str]:
+) -> tuple[int, str, str]:
     cmd = " ".join([shlex.quote(c) for c in cmd])
     try:
         proc = subprocess.Popen(

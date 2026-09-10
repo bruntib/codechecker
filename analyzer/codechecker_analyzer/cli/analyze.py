@@ -15,7 +15,6 @@ import json
 import os
 import shutil
 import sys
-from typing import List
 from pathlib import Path
 from functools import partial
 
@@ -851,7 +850,7 @@ LLVM/Clang community, and thus discouraged.
 
 def is_analyzer_config_valid(
     args,
-    analyzer_config_args: List[AnalyzerConfigArg]
+    analyzer_config_args: list[AnalyzerConfigArg]
 ) -> bool:
     """
     Ensure that the analyzer_config parameter is set to a valid value
@@ -941,7 +940,7 @@ def is_analyzer_config_valid(
 
 
 def is_checker_config_valid(
-    checker_config_args: List[CheckerConfigArg]
+    checker_config_args: list[CheckerConfigArg]
 ) -> bool:
     """
     Ensure that the checker_config parameter is set to a valid value
@@ -987,16 +986,16 @@ def is_checker_config_valid(
 
 
 def get_affected_file_paths(
-    file_filters: List[str],
+    file_filters: list[str],
     compile_commands: tu_collector.CompilationDB,
     jobs: int
-) -> List[str]:
+) -> list[str]:
     """
     Returns a list of source files for existing header file otherwise returns
     with the same file path expression.
     """
     file_paths = []  # Use list to keep the order of the file paths.
-    header_files: List[str] = []
+    header_files: list[str] = []
     for file_filter in file_filters:
         file_paths.append(str(Path(file_filter).resolve())
                           if '*' not in file_filter else file_filter)

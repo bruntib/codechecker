@@ -9,7 +9,7 @@
 
 import fnmatch
 import os
-from typing import List, Optional
+from typing import Optional
 import yaml
 
 from codechecker_report_converter.report import Report, SourceReviewStatus
@@ -354,7 +354,7 @@ class ReviewStatusHandler:
 
         return None
 
-    def source_comment_warnings(self) -> List[str]:
+    def source_comment_warnings(self) -> list[str]:
         """
         Sometimes it is not intuitive why the given review status is determined
         for a report. For example, if an in-source suppression is misspelled,

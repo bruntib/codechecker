@@ -10,7 +10,7 @@ import logging
 import os
 import re
 
-from typing import Iterator, List, Optional, Tuple
+from typing import Iterator, Optional
 
 from codechecker_report_converter.report import BugPathEvent, File, \
     get_or_create_file, Report
@@ -46,7 +46,7 @@ class SANParser(BaseParser):
         self,
         it: Iterator[str],
         line: str
-    ) -> Tuple[Optional[Report], str]:
+    ) -> tuple[Optional[Report], str]:
         """ Parses ThreadSanitizer output message. """
         match = self.line_re.match(line)
         if not match:
@@ -71,7 +71,7 @@ class SANParser(BaseParser):
         self,
         it: Iterator[str],
         line: str
-    ) -> Tuple[List[Report], str]:
+    ) -> tuple[list[Report], str]:
         """ Parse the given line. """
         report, next_line = self.parse_sanitizer_message(it, line)
         if report:
@@ -103,12 +103,12 @@ class SANParser(BaseParser):
 
     def create_report(
         self,
-        events: List[BugPathEvent],
+        events: list[BugPathEvent],
         file: File,
         line: int,
         column: int,
         message: str,
-        stack_traces: List[str],
+        stack_traces: list[str],
         checker_name: Optional[str] = None
     ) -> Report:
         """
@@ -140,10 +140,10 @@ class SANParser(BaseParser):
         self,
         it: Iterator[str],
         line: str
-    ) -> Tuple[List[str], List[BugPathEvent], str]:
+    ) -> tuple[list[str], list[BugPathEvent], str]:
         """ Iterate over lines and parse stack traces. """
-        events: List[BugPathEvent] = []
-        stack_traces: List[str] = []
+        events: list[BugPathEvent] = []
+        stack_traces: list[str] = []
 
         while line.strip():
             event = self.parse_stack_trace_line(line)

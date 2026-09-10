@@ -7,8 +7,8 @@
 # -------------------------------------------------------------------------
 """Helper functions, mixin classes, and miscellaneous utilities."""
 import bisect
-from typing import Any, Callable, Collection, Dict, List, Optional, Set, \
-    Sequence, Type, TypeVar, Union
+from typing import Any, Callable, Collection, Optional, \
+    Sequence, TypeVar, Union
 
 
 _T = TypeVar("_T")
@@ -25,7 +25,7 @@ class _Singleton:
     without having to serialise a complex state object over the communication
     channel between the manager and the processes.
     """
-    _instances: Dict[Type, Any] = {}
+    _instances: dict[type, Any] = {}
 
     def __new__(cls, *args, **kwargs) -> object:
         if cls not in cls._instances:
@@ -48,7 +48,7 @@ def find_if(s: Sequence[_T], p: Callable[[_T], bool]) -> Optional[int]:
     return next((i for i, e in enumerate(s) if p(e)), None)
 
 
-def lower_bound(l_: List[_T], e: _T) -> Optional[_T]:
+def lower_bound(l_: list[_T], e: _T) -> Optional[_T]:
     """
     Searches for the first element in the list `l_` which is **not** ordered
     before (using ``<``) `e`, i.e., an ``x`` that is ``max(x)`` such that
@@ -80,9 +80,9 @@ def lower_bound(l_: List[_T], e: _T) -> Optional[_T]:
     return l_[idx - 1]
 
 
-def merge_if_no_collision(existing: Dict[Any, Any],
-                          new: Dict[Any, Any],
-                          conflicts: Set[Any],
+def merge_if_no_collision(existing: dict[Any, Any],
+                          new: dict[Any, Any],
+                          conflicts: set[Any],
                           conflict_cb: Optional[Callable[[Any, Any, Any],
                                                          None]] = None):
     """

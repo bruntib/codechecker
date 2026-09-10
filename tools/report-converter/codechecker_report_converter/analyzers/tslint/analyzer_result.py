@@ -10,8 +10,6 @@ import logging
 import os
 import json
 
-from typing import Dict, List
-
 from codechecker_report_converter.report import File, get_or_create_file, \
     Report
 
@@ -40,9 +38,9 @@ report-converter -t tslint -o ./codechecker_tslint_reports \
 # Store the TSLint reports with CodeChecker.
 CodeChecker store ./codechecker_tslint_reports -n tslint"""
 
-    def get_reports(self, file_path: str) -> List[Report]:
+    def get_reports(self, file_path: str) -> list[Report]:
         """ Parse the given analyzer result. """
-        reports: List[Report] = []
+        reports: list[Report] = []
 
         if not os.path.exists(file_path):
             LOG.error("Report file does not exist: %s", file_path)
@@ -58,7 +56,7 @@ CodeChecker store ./codechecker_tslint_reports -n tslint"""
                       file_path)
             return reports
 
-        file_cache: Dict[str, File] = {}
+        file_cache: dict[str, File] = {}
         for bug in bugs:
             fp = os.path.join(os.path.dirname(file_path), bug.get('name'))
 

@@ -9,7 +9,7 @@
 Clang compiler diagnostics (implemented through CodeChecker as Clang-Tidy
 checks).
 """
-from typing import Collection, Optional, Tuple
+from typing import Collection, Optional
 import urllib.parse
 
 from ... import http_ as http, transformer
@@ -56,7 +56,7 @@ class ClangDiagnosticVerifier(HTMLAnchorVerifier):
             return Status.MISSING
         return Status.OK
 
-    def _normalise_checker_name(self, checker: str) -> Tuple[str, str]:
+    def _normalise_checker_name(self, checker: str) -> tuple[str, str]:
         """
         Returns a ``(checker_name, checker_anchor)`` after applying the usual
         naming pattern, normalising from ``clang-diagnostic-foo`` to ``-Wfoo``.
@@ -88,7 +88,7 @@ class ClangDiagnosticVerifier(HTMLAnchorVerifier):
         _, anchor = self._http.split_anchor(url)
         normal_name, normal_anchor = self._normalise_checker_name(checker)
 
-        def _try_anchor(prefixes: Collection[Tuple[str, str]],
+        def _try_anchor(prefixes: Collection[tuple[str, str]],
                         url: str) -> Optional[str]:
             for prefix in prefixes:
                 other_anchor = next(

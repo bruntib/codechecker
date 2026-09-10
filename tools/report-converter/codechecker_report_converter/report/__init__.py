@@ -14,7 +14,7 @@ import json
 import logging
 import os
 
-from typing import Callable, Dict, List, Optional, Protocol, Set, Tuple, \
+from typing import Callable, Optional, Protocol, \
         Union, Any
 
 from .. import util
@@ -22,8 +22,8 @@ from .. import util
 
 LOG = logging.getLogger('report-converter')
 
-FakeChecker: Tuple[str, str] = ("__FAKE__", "__FAKE__")
-UnknownChecker: Tuple[str, str] = ("UNKNOWN", "NOT FOUND")
+FakeChecker: tuple[str, str] = ("__FAKE__", "__FAKE__")
+UnknownChecker: tuple[str, str] = ("UNKNOWN", "NOT FOUND")
 
 
 # FIXME:
@@ -105,13 +105,13 @@ class File:
 
         return self.__content.splitlines(keepends=True)[line - 1]
 
-    def trim(self, path_prefixes: Optional[List[str]] = None) -> str:
+    def trim(self, path_prefixes: Optional[list[str]] = None) -> str:
         """ Removes the longest matching leading path from the file paths. """
         self.__path = util.trim_path_prefixes(
             self.__path, path_prefixes)
         return self.__path
 
-    def to_json(self) -> Dict:
+    def to_json(self) -> dict:
         """ Creates a JSON dictionary. """
         return {
             "id": self.id,
@@ -137,7 +137,7 @@ class File:
 
 def get_or_create_file(
     file_path: str,
-    file_cache: Dict[str, File]
+    file_cache: dict[str, File]
 ) -> File:
     """ Get File object for the given file path. """
     if file_path not in file_cache:
@@ -159,7 +159,7 @@ class Range:
         self.end_line = end_line
         self.end_col = end_col
 
-    def to_json(self) -> Dict:
+    def to_json(self) -> dict:
         """ Creates a JSON dictionary. """
         return {
             "start_line": self.start_line,
@@ -190,7 +190,7 @@ class BugPathPosition:
         self.file = file
         self.range = file_range
 
-    def to_json(self) -> Dict:
+    def to_json(self) -> dict:
         """ Creates a JSON dictionary. """
         return {
             "range": self.range.to_json() if self.range else None,
@@ -228,7 +228,7 @@ class BugPathEvent(BugPathPosition):
 
         self.message = message
 
-    def to_json(self) -> Dict:
+    def to_json(self) -> dict:
         """ Creates a JSON dictionary. """
         return {
             "file": self.file.to_json(),
@@ -267,7 +267,7 @@ class MacroExpansion(BugPathEvent):
         super().__init__(message, file, line, column, file_range)
         self.name = name
 
-    def to_json(self) -> Dict:
+    def to_json(self) -> dict:
         """ Creates a JSON dictionary. """
         return {
             "name": self.name,
@@ -315,11 +315,11 @@ class Report:
         type: Optional[str] = None,  # pylint: disable=redefined-builtin
         analyzer_result_file_path: Optional[str] = None,
         source_line: Optional[str] = None,
-        bug_path_events: Optional[List[BugPathEvent]] = None,
-        bug_path_positions: Optional[List[BugPathPosition]] = None,
-        notes: Optional[List[BugPathEvent]] = None,
-        macro_expansions: Optional[List[MacroExpansion]] = None,
-        annotations: Optional[Dict[str, str]] = None,
+        bug_path_events: Optional[list[BugPathEvent]] = None,
+        bug_path_positions: Optional[list[BugPathPosition]] = None,
+        notes: Optional[list[BugPathEvent]] = None,
+        macro_expansions: Optional[list[MacroExpansion]] = None,
+        annotations: Optional[dict[str, str]] = None,
         static_message: Optional[str] = None,
         review_status: Optional[SourceReviewStatus] = SourceReviewStatus()
     ):
@@ -364,8 +364,8 @@ class Report:
         self.review_status = review_status
 
         self.__source_line: Optional[str] = source_line
-        self.__files: Optional[Set[File]] = None
-        self.__changed_files: Optional[Set[str]] = None
+        self.__files: Optional[set[File]] = None
+        self.__changed_files: Optional[set[str]] = None
 
     @property
     def source_line(self) -> str:
@@ -388,7 +388,7 @@ class Report:
         if self.__source_line is None:
             self.__source_line = source_line
 
-    def trim_path_prefixes(self, path_prefixes: Optional[List[str]] = None):
+    def trim_path_prefixes(self, path_prefixes: Optional[list[str]] = None):
         """ Removes the longest matching leading path from the file paths. """
         self.file.trim(path_prefixes)
 
@@ -401,7 +401,7 @@ class Report:
             event.file.trim(path_prefixes)
 
     @property
-    def files(self) -> Set[File]:
+    def files(self) -> set[File]:
         """ Returns all referenced file paths. """
         if self.__files is not None:
             return self.__files
@@ -419,17 +419,17 @@ class Report:
         return self.__files
 
     @property
-    def trimmed_files(self) -> Set[str]:
+    def trimmed_files(self) -> set[str]:
         """ Returns all referenced trimmed file paths. """
         return {file.path for file in self.files}
 
     @property
-    def original_files(self) -> Set[str]:
+    def original_files(self) -> set[str]:
         """ Returns all referenced original file paths. """
         return {file.original_path for file in self.files}
 
     @property
-    def changed_files(self) -> Set[str]:
+    def changed_files(self) -> set[str]:
         """
         Returns set of files which are changed or not available compared to the
         analyzer result file.
@@ -470,7 +470,7 @@ class Report:
         return self.__changed_files
 
     @changed_files.setter
-    def changed_files(self, changed_files: Set[str]):
+    def changed_files(self, changed_files: set[str]):
         """ Sets the changed files list manually if it's not set yet. """
         if self.__changed_files is None:
             self.__changed_files = changed_files
@@ -484,7 +484,7 @@ class Report:
 
         return skip_handlers.should_skip(self.file.original_path)
 
-    def to_json(self) -> Dict:
+    def to_json(self) -> dict:
         """ Creates a JSON dictionary. """
         return {
             "analyzer_result_file_path": self.analyzer_result_file_path,

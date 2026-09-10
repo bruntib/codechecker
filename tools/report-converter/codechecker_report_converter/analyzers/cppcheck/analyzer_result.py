@@ -11,8 +11,6 @@ import glob
 import logging
 import os
 
-from typing import Dict, List
-
 from codechecker_report_converter.report import BugPathEvent, \
         Range, File, Report, report_file
 
@@ -45,9 +43,9 @@ report-converter -t cppcheck -o ./codechecker_cppcheck_reports \
 # Store the Cppcheck reports with CodeChecker.
 CodeChecker store ./codechecker_cppcheck_reports -n cppcheck"""
 
-    def get_reports(self, file_path: str) -> List[Report]:
+    def get_reports(self, file_path: str) -> list[Report]:
         """ Get reports from the given analyzer result. """
-        reports: List[Report] = []
+        reports: list[Report] = []
 
         plist_files = []
         if os.path.isdir(file_path):
@@ -59,7 +57,7 @@ CodeChecker store ./codechecker_cppcheck_reports -n cppcheck"""
                       "directory or a plist file.")
             return reports
 
-        file_cache: Dict[str, File] = {}
+        file_cache: dict[str, File] = {}
         for plist_file in plist_files:
             plist_reports = report_file.get_reports(
                 plist_file, None, file_cache)

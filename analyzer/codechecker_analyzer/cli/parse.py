@@ -14,7 +14,7 @@ human-readable format.
 import argparse
 import os
 import sys
-from typing import Dict, Optional, Set, List, Any
+from typing import Optional, Any
 import json
 import fnmatch
 
@@ -257,7 +257,7 @@ def add_arguments_to_parser(parser):
         func=main, func_process_config_file=cmd_config.process_config_file)
 
 
-def ch_workdir(metadata: Optional[Dict]):
+def ch_workdir(metadata: Optional[dict]):
     """ Change working directory to the one noted in metadata.json if this
     file exists and contains "working_directory".
     """
@@ -274,7 +274,7 @@ def ch_workdir(metadata: Optional[Dict]):
         sys.exit(1)
 
 
-def get_metadata(dir_path: str) -> Optional[Dict]:
+def get_metadata(dir_path: str) -> Optional[dict]:
     """ Get metadata from the given dir path or None if not exists. """
     metadata_file = os.path.join(dir_path, "metadata.json")
     if os.path.exists(metadata_file):
@@ -283,15 +283,15 @@ def get_metadata(dir_path: str) -> Optional[Dict]:
     return None
 
 
-def get_report_dir_status(compile_commands: List[dict[str, str]],
+def get_report_dir_status(compile_commands: list[dict[str, str]],
                           report_dir: str,
                           detailed_flag: bool):
 
-    recent: Dict[str, Dict[str, int]] = {}
-    old: Dict[str, Dict[str, int]] = {}
-    failed: Dict[str, Dict[str, int]] = {}
-    missing: Dict[str, Dict[str, int]] = {}
-    analyzed_actions: Dict[str, int] = {}
+    recent: dict[str, dict[str, int]] = {}
+    old: dict[str, dict[str, int]] = {}
+    failed: dict[str, dict[str, int]] = {}
+    missing: dict[str, dict[str, int]] = {}
+    analyzed_actions: dict[str, int] = {}
 
     for analyzer in supported_analyzers:
         recent[analyzer] = {}
@@ -337,7 +337,7 @@ def get_report_dir_status(compile_commands: List[dict[str, str]],
         "failed": failed
     }
 
-    out_analyzers: Dict[str, Any] = {}
+    out_analyzers: dict[str, Any] = {}
     for analyzer in supported_analyzers:
         detailed, summary = {}, {}
 
@@ -388,7 +388,7 @@ def get_report_dir_status(compile_commands: List[dict[str, str]],
 
 def print_status(report_dir: str,
                  detailed_flag: bool,
-                 files: Optional[List[str]],
+                 files: Optional[list[str]],
                  export: Optional[str] = None,
                  output_path: Optional[str] = None):
     if export and export != "json":
@@ -611,7 +611,7 @@ def main(args):
     all_reports = []
     statistics = Statistics()
     file_cache = {}  # For memory effiency.
-    changed_files: Set[str] = set()
+    changed_files: set[str] = set()
     processed_path_hashes = set()
     processed_file_paths = set()
     print_steps = 'print_steps' in args

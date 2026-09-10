@@ -6,8 +6,6 @@
 #
 # -------------------------------------------------------------------------
 
-from typing import List
-
 from codechecker_report_converter.report import Report
 
 from ..analyzer_result import AnalyzerResultBase
@@ -35,6 +33,6 @@ report-converter -t sparse -o ./codechecker_sparse_reports ./sparse.out
 # Store the Sparse reports with CodeChecker.
 CodeChecker store ./codechecker_sparse_reports -n sparse"""
 
-    def get_reports(self, file_path: str) -> List[Report]:
+    def get_reports(self, file_path: str) -> list[Report]:
         """ Get reports from the given analyzer result. """
         return Parser(file_path).get_reports(file_path)

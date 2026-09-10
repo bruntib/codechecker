@@ -4,7 +4,7 @@ import zipfile
 
 from git import Repo
 from git.exc import InvalidGitRepositoryError, GitCommandError
-from typing import Dict, Iterable, Optional
+from typing import Iterable, Optional
 
 from codechecker_common.compatibility.multiprocessing import Pool
 from codechecker_common.logger import get_logger
@@ -12,7 +12,7 @@ from codechecker_common.logger import get_logger
 LOG = get_logger('system')
 
 
-FileBlameInfo = Dict[str, Optional[Dict]]
+FileBlameInfo = dict[str, Optional[dict]]
 
 
 def __get_tracking_branch(repo: Repo) -> Optional[str]:

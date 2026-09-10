@@ -13,7 +13,7 @@ import json
 import logging
 import re
 
-from typing import Dict, Iterable, List, Optional, Set, TextIO, Tuple
+from typing import Iterable, Optional, TextIO
 
 from . import util
 
@@ -49,7 +49,7 @@ class SpellException(Exception):
 class SourceCodeComment:
     def __init__(
         self,
-        checkers: Set[str],
+        checkers: set[str],
         message: str,
         status: str,
         line: Optional[str] = None
@@ -59,7 +59,7 @@ class SourceCodeComment:
         self.status = status
         self.line = line
 
-    def to_json(self) -> Dict:
+    def to_json(self) -> dict:
         """ Creates a JSON dictionary. """
         return {
             "checkers": list(self.checkers),
@@ -83,7 +83,7 @@ class SourceCodeComment:
         return json.dumps(self.to_json())
 
 
-SourceCodeComments = List[SourceCodeComment]
+SourceCodeComments = list[SourceCodeComment]
 
 
 class SourceCodeCommentHandler:
@@ -105,7 +105,7 @@ class SourceCodeCommentHandler:
         return source_line.strip().startswith('//')
 
     @staticmethod
-    def __check_if_cstyle_comment(source_line) -> Tuple[bool, bool]:
+    def __check_if_cstyle_comment(source_line) -> tuple[bool, bool]:
         """
         Check if the line contains the start '/*' or
         the the end '*/' of a C style comment.
@@ -200,15 +200,15 @@ class SourceCodeCommentHandler:
         self,
         fp: TextIO,
         line_numbers: Iterable[int]
-    ) -> Tuple[List[Tuple[int, SourceCodeComments]], List[str]]:
+    ) -> tuple[list[tuple[int, SourceCodeComments]], list[str]]:
         """collect all the source line review comments if exists
         in a source file at the given line numbers.
 
         returns a list of (line_num, comments) tuples where comments
         were found.
         """
-        comments: List[Tuple[int, SourceCodeComments]] = []
-        misspelled_comments: List[str] = []
+        comments: list[tuple[int, SourceCodeComments]] = []
+        misspelled_comments: list[str] = []
         if not contains_codechecker_comment(fp):
             return comments, misspelled_comments
 

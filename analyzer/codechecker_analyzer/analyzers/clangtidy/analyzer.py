@@ -19,7 +19,7 @@ from semver.version import Version
 import shutil
 import subprocess
 import sys
-from typing import Iterable, List, Optional, Set, Tuple
+from typing import Iterable, Optional
 
 import yaml
 
@@ -200,8 +200,8 @@ def get_warnings():
 
 def _add_asterisk_for_group(
     subset_checkers: Iterable[str],
-    all_checkers: Set[str]
-) -> List[str]:
+    all_checkers: set[str]
+) -> list[str]:
     """
     Since CodeChecker interprets checker name prefixes as checker groups, they
     have to be added a '*' joker character when using them at clang-tidy
@@ -334,7 +334,7 @@ class ClangTidy(analyzer_base.SourceAnalyzer):
             return []
 
     @classmethod
-    def get_checker_config(cls) -> List[analyzer_base.CheckerConfig]:
+    def get_checker_config(cls) -> list[analyzer_base.CheckerConfig]:
         """
         Return the checker configuration of the all of the supported checkers.
         """
@@ -357,7 +357,7 @@ class ClangTidy(analyzer_base.SourceAnalyzer):
         return result
 
     @classmethod
-    def get_analyzer_config(cls) -> List[analyzer_base.AnalyzerConfig]:
+    def get_analyzer_config(cls) -> list[analyzer_base.AnalyzerConfig]:
         """
         Return the analyzer configuration with all checkers enabled.
         """
@@ -382,7 +382,7 @@ class ClangTidy(analyzer_base.SourceAnalyzer):
 
         return list(native_config) + list(cls.__additional_analyzer_config)
 
-    def get_checker_list(self, config) -> Tuple[List[str], List[str]]:
+    def get_checker_list(self, config) -> tuple[list[str], list[str]]:
         """
         Return a list of checkers and warnings what needs to be enabled during
         analysis.

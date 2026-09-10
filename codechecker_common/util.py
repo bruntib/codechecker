@@ -18,7 +18,7 @@ import yaml
 import os
 import pathlib
 import random
-from typing import List, TextIO, Union
+from typing import TextIO, Union
 
 import portalocker
 
@@ -179,7 +179,7 @@ def replace_env_var(cfg_file):
     return replacer
 
 
-def load_args_from_file(filepath: str) -> List[str]:
+def load_args_from_file(filepath: str) -> list[str]:
     """
     Returns the content of the given file as a list of command line arguments.
     The file may contain parts in $(this) format. These will be replaced by the

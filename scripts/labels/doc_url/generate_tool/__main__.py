@@ -12,7 +12,7 @@ from functools import partial
 import os
 import pathlib
 import sys
-from typing import List, Optional, Set
+from typing import Optional
 
 from tabulate import tabulate
 
@@ -200,7 +200,7 @@ def main(args: argparse.Namespace) -> Optional[int]:
         raise SystemExit(2) from arg_err
 
     rc = 0
-    statistics: List[tool.Statistics] = []
+    statistics: list[tool.Statistics] = []
     trace("Checking checker labels from '%s'", args.checker_label_dir)
 
     args.checker_label_dir = pathlib.Path(args.checker_label_dir)
@@ -246,7 +246,7 @@ def main(args: argparse.Namespace) -> Optional[int]:
                 continue
 
             urls: SingleLabels = {}
-            conflicts: Set[str] = set()
+            conflicts: set[str] = set()
             for generator_class in geners:
                 log("%sGenerating '%s' as '%s' (%s)...",
                     emoji(":thought_balloon:  "),

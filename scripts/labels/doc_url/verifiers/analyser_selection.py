@@ -9,7 +9,7 @@
 Selects the appropriate verification engine for the analyser configuration.
 """
 from collections import defaultdict
-from typing import Dict, Iterable, Tuple, Type, Union
+from typing import Iterable, Union
 
 from ...checker_labels import SingleLabels
 
@@ -27,7 +27,7 @@ class _Generic:
     """
 
     @staticmethod
-    def select(labels: SingleLabels) -> Type:
+    def select(labels: SingleLabels) -> type:
         return HTMLAnchorVerifier if any('#' in label
                                          for label in labels.values()
                                          if label) \
@@ -35,7 +35,7 @@ class _Generic:
 
 
 # Set an analyser to explicit None to disable the default "generic" behaviour.
-AnalyserVerifiers: Dict[str, Union[Type, Tuple[Type, ...]]] = defaultdict(
+AnalyserVerifiers: dict[str, Union[type, tuple[type, ...]]] = defaultdict(
     lambda: _Generic,
     {
         "clangsa": ClangSAVerifier,
@@ -44,7 +44,7 @@ AnalyserVerifiers: Dict[str, Union[Type, Tuple[Type, ...]]] = defaultdict(
 )
 
 
-def select_verifier(analyser: str, labels: SingleLabels) -> Iterable[Type]:
+def select_verifier(analyser: str, labels: SingleLabels) -> Iterable[type]:
     """
     Dispatches the `analyser` to one of the verifier classes and returns
     which class(es) should be used for the verification.

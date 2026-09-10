@@ -32,7 +32,7 @@ from multiprocessing import Pool
 from shutil import which
 
 from pathlib import Path
-from typing import Iterable, Iterator, List, Optional, Set, Tuple, Union
+from typing import Iterable, Iterator, Optional, Union
 
 if sys.version_info >= (3, 8):
     from typing import TypedDict  # pylint: disable=no-name-in-module
@@ -56,7 +56,7 @@ class CompileAction(TypedDict):
     directory: str
 
 
-CompilationDB = List[CompileAction]
+CompilationDB = list[CompileAction]
 
 
 def __random_string(length: int) -> str:
@@ -68,7 +68,7 @@ def __random_string(length: int) -> str:
                    for i in range(length))
 
 
-def __get_toolchain_compiler(command: List[str]) -> Optional[str]:
+def __get_toolchain_compiler(command: list[str]) -> Optional[str]:
     """
     Clang can be given a GCC toolchain so that the standard libs of that GCC
     are used. This function returns the path of the GCC toolchain compiler.
@@ -83,7 +83,7 @@ def __get_toolchain_compiler(command: List[str]) -> Optional[str]:
     return None
 
 
-def __determine_compiler(gcc_command: List[str]) -> str:
+def __determine_compiler(gcc_command: list[str]) -> str:
     """
     This function determines the compiler from the given compilation command.
     If the first part of the gcc_command is ccache invocation then the rest
@@ -122,9 +122,9 @@ def __determine_compiler(gcc_command: List[str]) -> str:
 
 
 def __gather_dependencies(
-    cmd: Union[str, List[str]],
+    cmd: Union[str, list[str]],
     build_dir: str
-) -> List[str]:
+) -> list[str]:
     """
     Returns a list of files which are contained in the translation unit built
     by the given build command.
@@ -137,10 +137,10 @@ def __gather_dependencies(
     """
 
     def __eliminate_argument(
-        arg_vect: List[str],
+        arg_vect: list[str],
         opt_string: str,
         has_arg=False
-    ) -> List[str]:
+    ) -> list[str]:
         """
         This call eliminates the parameters matching the given option string,
         along with its argument coming directly after the opt-string if any,
@@ -299,10 +299,10 @@ def __get_ctu_buildactions(
 
 
 def get_dependent_headers(
-    command: Union[str, List[str]],
+    command: Union[str, list[str]],
     build_dir_path: str,
     collect_toolchain=True
-) -> Tuple[Set[str], str]:
+) -> tuple[set[str], str]:
     """
     Returns a pair of which the first component is a set of files building up
     the translation unit and the second component is an error message which is
@@ -419,7 +419,7 @@ def zip_tu_files(
         compilation_database = compilation_db
 
     no_sources = 'no-sources'
-    tu_files: Set[str] = set()
+    tu_files: set[str] = set()
     error_messages = ''
 
     filtered_compilation_database = list(filter(
@@ -427,7 +427,7 @@ def zip_tu_files(
         compilation_database))
 
     if ctu_deps_dir:
-        involved_ctu_actions: List[CompileAction] = []
+        involved_ctu_actions: list[CompileAction] = []
 
         for action in filtered_compilation_database:
             involved_ctu_actions.extend(__get_ctu_buildactions(
@@ -474,7 +474,7 @@ def zip_tu_files(
 
 
 def __get_dependent_headers_for_build_action(build_action: CompileAction
-                                             ) -> Tuple[str, Set[str]]:
+                                             ) -> tuple[str, set[str]]:
     """ Return the source file and dependent headers for a build action. """
     files, _ = get_dependent_headers(
         build_action['command'],
@@ -487,9 +487,9 @@ def __get_dependent_headers_for_build_action(build_action: CompileAction
 
 def get_dependent_sources(
     compilation_db: CompilationDB,
-    header_paths: Optional[List[str]] = None,
+    header_paths: Optional[list[str]] = None,
     jobs: int = 1
-) -> Set[str]:
+) -> set[str]:
     """ Get dependencies for each files in each translation unit. """
     if not header_paths:
         return set()

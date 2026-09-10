@@ -11,7 +11,6 @@ Defines a subcommand for CodeChecker which prints version information.
 import argparse
 import json
 
-from typing import Dict, List, Tuple
 from codechecker_analyzer import analyzer_context
 
 from codechecker_report_converter import twodim
@@ -35,7 +34,7 @@ class Version:
     def is_release_candidate(self):
         return 'rc' in self.version
 
-    def to_dict(self) -> Dict[str, str]:
+    def to_dict(self) -> dict[str, str]:
         """ Get version information in dictionary format. """
         return {
             "base_package_version": self.version,
@@ -43,7 +42,7 @@ class Version:
             "git_commit": self.git_hash,
             "git_tag": self.git_tag}
 
-    def to_list(self) -> List[Tuple[str, str]]:
+    def to_list(self) -> list[tuple[str, str]]:
         """ Get version information in list format. """
         return [
             ("Base package version", self.version),

@@ -9,7 +9,7 @@
 Clang compiler diagnostics (implemented through CodeChecker as Clang-Tidy
 checks.)
 """
-from typing import Iterable, Optional, Tuple
+from typing import Iterable, Optional
 
 from ... import http_ as http
 from ...projects.llvm import clang_diagnostic
@@ -31,7 +31,7 @@ class ClangDiagnosticGenerator(Base):
     def skip(self, checker: str) -> bool:
         return not checker.startswith("clang-diagnostic")
 
-    def generate(self) -> Iterable[Tuple[str, Optional[str]]]:
+    def generate(self) -> Iterable[tuple[str, Optional[str]]]:
         for checker, _, section in clang_diagnostic \
                 .get_clang_diagnostic_documentation(self._http):
             anchor = section.find(".//a[@class=\"headerlink\"]") \

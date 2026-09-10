@@ -6,7 +6,6 @@ Revises:     9d956a0fae8d
 Create Date: 2023-10-20 14:11:48.371981
 """
 from logging import getLogger
-from typing import Dict, Tuple
 
 from alembic import op
 import sqlalchemy as sa

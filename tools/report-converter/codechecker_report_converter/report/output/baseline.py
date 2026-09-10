@@ -8,7 +8,7 @@
 """ CodeChecker baseline output helpers. """
 
 import logging
-from typing import Iterable, List, Set, TextIO
+from typing import Iterable, TextIO
 
 from codechecker_report_converter.report import Report
 
@@ -16,7 +16,7 @@ from codechecker_report_converter.report import Report
 LOG = logging.getLogger('report-converter')
 
 
-def __get_report_hashes(f: TextIO) -> List[str]:
+def __get_report_hashes(f: TextIO) -> list[str]:
     """ Get report hashes from the given file. """
     return [h.strip() for h in f.readlines() if h]
 
@@ -28,7 +28,7 @@ def check(file_path: str) -> bool:
 
 def get_report_hashes(
     baseline_file_paths: Iterable[str]
-) -> Set[str]:
+) -> set[str]:
     """ Get uniqued hashes from baseline files. """
     report_hashes = set()
     for file_path in baseline_file_paths:
@@ -38,7 +38,7 @@ def get_report_hashes(
     return report_hashes
 
 
-def convert(reports: Iterable[Report]) -> List[str]:
+def convert(reports: Iterable[Report]) -> list[str]:
     """ Convert the given reports to CodeChecker baseline format.
 
     Returns a list of sorted unique report hashes.
