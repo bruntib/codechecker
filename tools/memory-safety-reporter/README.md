@@ -16,7 +16,7 @@ For the extensive list of argument, see the help of the script!
 
 ## Requirements
 
-- Python >= 3.9
+- Python >= 3.11
 
 ## Authors
 
