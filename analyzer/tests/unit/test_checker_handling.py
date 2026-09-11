@@ -643,7 +643,7 @@ class CheckerHandlingClangTidyTest(unittest.TestCase):
             analyzer.construct_analyzer_cmd(result_handler)))
 
         analyzer.config_handler.checker_config = \
-            '{"Checks": "hicpp-use-nullptr"}'
+            '{"Checks": "modernize-use-nullptr"}'
 
         self.assertTrue(self._is_disabled(
             'clang-analyzer',

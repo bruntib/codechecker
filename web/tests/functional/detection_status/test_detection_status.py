@@ -422,24 +422,25 @@ int main()
 
     def test_detection_status_off_with_cfg(self):
         """ Test detection status with .clang-tidy config file. """
-        # Explicitly disable all hicpp checkers from the command line but
-        # enable all hicpp and modernize checkers from the .clang-tidy file.
-        # If we store the results to the server than no reports will be marked
-        # as OFF.
+        # Explicitly disable all readability checkers from the command line but
+        # enable all readability and modernize checkers from the .clang-tidy
+        # file. If we store the results to the server, then no reports will be
+        # marked as OFF.
         cfg = dict(self._codechecker_cfg)
-        cfg['checkers'] = ['-d', 'hicpp']
+        cfg['checkers'] = ['-d', 'readability']
         cfg['analyzer_config'] = ['clang-tidy:take-config-from-directory=true']
 
         self._create_source_file(1)
-        self._create_clang_tidy_cfg_file(['-*', 'hicpp-*', 'modernize-*'])
+        self._create_clang_tidy_cfg_file(
+            ['-*', 'readability-*', 'modernize-*'])
         return_code = self._check_source_file(cfg)
         self.assertEqual(return_code, 0)
         reports = self._cc_client.getRunResults(
             None, 100, 0, [], ReportFilter(), None, False)
 
-        hicpp_results = [r for r in reports
-                         if r.checkerId.startswith('hicpp')]
-        self.assertTrue(hicpp_results)
+        readability_results = [
+            r for r in reports if r.checkerId.startswith('readability')]
+        self.assertTrue(readability_results)
 
         modernize_results = [r for r in reports
                              if r.checkerId.startswith('modernize')]
