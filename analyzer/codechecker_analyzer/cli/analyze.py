@@ -16,12 +16,14 @@ import os
 import shutil
 import sys
 from pathlib import Path
-from functools import partial
 
 from tu_collector import tu_collector
 
 from codechecker_analyzer import analyzer, analyzer_context, \
     compilation_database
+from codechecker_analyzer.analyzer_base import AnalyzerBase
+from codechecker_analyzer.analysis_manager import AnalysisManager, \
+    AnalysisManagerConfig
 from codechecker_analyzer.analyzers import analyzer_types, clangsa
 from codechecker_analyzer.arg import \
     OrderedCheckersAction, OrderedConfigAction, existing_abspath, \
@@ -385,18 +387,17 @@ def add_arguments_to_parser(parser):
 
     analyzer_opts = parser.add_argument_group("analyzer arguments")
 
-    analyzer_opts.add_argument('--analyzers',
-                               nargs='+',
-                               dest='analyzers',
-                               metavar='ANALYZER',
-                               required=False,
-                               choices=analyzer_types.supported_analyzers,
-                               default=None,
-                               help="Run analysis only with the analyzers "
-                                    "specified. Currently supported analyzers "
-                                    "are: " +
-                                    ', '.join(analyzer_types.
-                                              supported_analyzers) + ".")
+    analyzer_opts.add_argument(
+        '--analyzers',
+        nargs='+',
+        dest='analyzers',
+        metavar='ANALYZER',
+        required=False,
+        choices=analyzer_types.supported_analyzers,
+        default=list(AnalyzerBase.get_analyzers(only_available=True).keys()),
+        help="Run analysis only with the analyzers "
+            "specified. Currently supported analyzers "
+            "are: " + ', '.join(analyzer_types.supported_analyzers) + ".")
 
     analyzer_opts.add_argument('--capture-analysis-output',
                                dest='capture_analysis_output',
@@ -488,7 +489,7 @@ def add_arguments_to_parser(parser):
                                dest='checker_config',
                                nargs='*',
                                action=OrderedConfigAction,
-                               default=argparse.SUPPRESS,
+                               default=[],
                                help="Checker configuration options in the "
                                     "following format: analyzer:key=value. "
                                     "The collection of the options can be "
@@ -849,7 +850,7 @@ LLVM/Clang community, and thus discouraged.
 
 
 def is_analyzer_config_valid(
-    args,
+    enabled_analyzers: list[str],
     analyzer_config_args: list[AnalyzerConfigArg]
 ) -> bool:
     """
@@ -857,44 +858,22 @@ def is_analyzer_config_valid(
     by verifying if it belongs to the set of allowed values.
     """
     wrong_config_messages = []
-    available_analyzers = {}
 
-    for analyzer_name, analyzer_class in \
-            analyzer_types.supported_analyzers.items():
-        if analyzer_class.get_binary_version() is not None:
-            available_analyzers[analyzer_name] = analyzer_class
+    available_analyzers = {
+        analyzer_name: analyzer_class
+        for analyzer_name, analyzer_class
+        in AnalyzerBase.get_analyzers().items()
+        if analyzer_class.is_available()
+    }
 
-    enabled_analyzers = {}
-    if args.analyzers:
-        enabled_analyzer_names = \
-            set(args.analyzers).intersection(available_analyzers)
-        enabled_analyzers = {
-            analyzer_name: available_analyzers[analyzer_name]
-            for analyzer_name in enabled_analyzer_names
-        }
-
-    if enabled_analyzers:
-        available_analyzers = enabled_analyzers
-
-    analyzer_configs = {}
-    for analyzer_name, analyzer_class in available_analyzers.items():
-        try:
-            analyzer_configs[analyzer_name] = \
-                analyzer_class.get_analyzer_config()
-        except Exception as e:
-            wrong_config_messages.append(
-                f"Could not get config for analyzer '{analyzer_name}'. "
-                f"Error: {e}")
-            continue
+    analyzer_configs = {
+        analyzer_name: analyzer_class.get_analyzer_config()
+        for analyzer_name, analyzer_class
+        in available_analyzers.items()
+        if analyzer_name in enabled_analyzers
+    }
 
     for cfg_arg in analyzer_config_args:
-        if enabled_analyzers and cfg_arg.analyzer not in enabled_analyzers:
-            wrong_config_messages.append(
-                f"The analyzer '{cfg_arg.analyzer}' is not enabled. Enable it "
-                "first using --analyzers to set the config "
-                f"'{cfg_arg.option}'.")
-            continue
-
         if cfg_arg.analyzer not in available_analyzers:
             wrong_config_messages.append(
                 f"Invalid argument to --analyzer-config: '{cfg_arg.analyzer}' "
@@ -902,18 +881,17 @@ def is_analyzer_config_valid(
                 f"{', '.join(a for a in available_analyzers)}.")
             continue
 
-        try:
-            analyzer_cfg = next(
-                (x for x in analyzer_configs[cfg_arg.analyzer]
-                 if x.option == cfg_arg.option),
-                None)
-        except Exception:
+        if cfg_arg.analyzer not in enabled_analyzers:
             wrong_config_messages.append(
-                f"The analyzer '{cfg_arg.analyzer}' is not found! Make sure "
-                "it is loaded or exists with the command "
-                "'CodeChecker analyzers'"
-            )
+                f"The analyzer '{cfg_arg.analyzer}' is not enabled. Enable it "
+                f"first using --analyzers to set the config "
+                f"'{cfg_arg.option}'.")
             continue
+
+        analyzer_cfg = next(
+            (x for x in analyzer_configs[cfg_arg.analyzer]
+             if x.option == cfg_arg.option),
+            None)
 
         if analyzer_cfg is None:
             wrong_config_messages.append(
@@ -921,14 +899,7 @@ def is_analyzer_config_valid(
                 f"has no config named '{cfg_arg.option}'. Use the "
                 f"'CodeChecker analyzers --analyzer-config "
                 f"{cfg_arg.analyzer}' command to see available configs.")
-        else:
-            try:
-                analyzer_cfg.value_type(cfg_arg.value)
-            except Exception as ex:
-                wrong_config_messages.append(
-                    f"Invalid value to --analyzer-config: "
-                    f"'{cfg_arg.analyzer}:{cfg_arg.option}={cfg_arg.value}'. "
-                    f"{ex}")
+        # TODO: Originally we checked the value type of a config option.
 
     if wrong_config_messages:
         for wrong_config_message in wrong_config_messages:
@@ -940,6 +911,7 @@ def is_analyzer_config_valid(
 
 
 def is_checker_config_valid(
+    enabled_analyzers: list[str],
     checker_config_args: list[CheckerConfigArg]
 ) -> bool:
     """
@@ -947,20 +919,34 @@ def is_checker_config_valid(
     by verifying if it belongs to the set of allowed values.
     """
     wrong_config_messages = []
-    supported_analyzers = analyzer_types.supported_analyzers
+
+    available_analyzers = {
+        analyzer_name: analyzer_class
+        for analyzer_name, analyzer_class
+        in AnalyzerBase.get_analyzers().items()
+        if analyzer_class.is_available()
+    }
 
     checker_configs = {
         analyzer_name: analyzer_class.get_checker_config()
         for analyzer_name, analyzer_class
-        in supported_analyzers.items()
+        in available_analyzers.items()
+        if analyzer_name in enabled_analyzers
     }
 
     for cfg_arg in checker_config_args:
-        if cfg_arg.analyzer not in supported_analyzers:
+        if cfg_arg.analyzer not in available_analyzers:
             wrong_config_messages.append(
-                f"Invalid argument to --checker-config: '{cfg_arg.analyzer}' "
-                f"is not a supported analyzer. Supported analyzers are: "
-                f"{', '.join(a for a in supported_analyzers)}.")
+                f"Invalid argument to --analyzer-config: '{cfg_arg.analyzer}' "
+                f"is not an available analyzer. Available analyzers are: "
+                f"{', '.join(a for a in available_analyzers)}.")
+            continue
+
+        if cfg_arg.analyzer not in enabled_analyzers:
+            wrong_config_messages.append(
+                f"The analyzer '{cfg_arg.analyzer}' is not enabled. Enable it "
+                f"first using --analyzers to set the config "
+                f"'{cfg_arg.option}'.")
             continue
 
         checker_cfg = next(
@@ -1245,28 +1231,32 @@ def main(args):
 
     __transform_deprecated_flags(args)
 
-    # Validate analyzer and checker config (if any)
-    config_validator = {
-        'analyzer_config': partial(is_analyzer_config_valid, args),
-        'checker_config': is_checker_config_valid
-    }
+    #--- Validate analyzer and checker config options ---#
 
-    config_validator_res = [validate_func(getattr(args, conf))
-                            for conf, validate_func in config_validator.items()
-                            if conf in args]
+    analyzer_config_ok = \
+        is_analyzer_config_valid(args.analyzers, args.analyzer_config)
+    checker_config_ok = \
+        is_checker_config_valid(args.analyzers, args.checker_config)
 
-    if False in config_validator_res \
-            and 'no_missing_checker_error' not in args:
-        LOG.info("Although it is not recommended, if you want to suppress "
-                 "errors relating to unknown analyzer/checker configs, "
-                 "consider using the option '--no-missing-checker-error'")
+    if (not analyzer_config_ok or not checker_config_ok) \
+            and not args.no_missing_checker_error:
+        LOG.info(
+            "Although it is not recommended, if you want to suppress "
+            "errors relating to unknown analyzer/checker configs, "
+            "consider using the option '--no-missing-checker-error'")
         sys.exit(1)
 
     # CTU loading mode is only meaningful if CTU itself is enabled.
+    # TODO: Is ctu_ast_mode meaningful in the first phase?
+    # TODO: These flags should be transformed to analyzer_config.
+    # TODO: Should be checked in AnalyzerBase. See the "TODO" at
+    # check_satisfied_capabilities.
     if 'ctu_ast_mode' in args and 'ctu_phases' not in args:
         LOG.error("Analyzer option 'ctu-ast-mode' requires CTU mode enabled")
         sys.exit(1)
 
+    # TODO: AnalyzerBase should have a function for validating parameters'
+    # correctness.
     check_satisfied_capabilities(args)
 
     try:
@@ -1460,6 +1450,18 @@ def main(args):
               compile_cmd_count.skipped)
     LOG.debug("Compile commands forwarded for analysis: %d",
               compile_cmd_count.analyze)
+
+    analysis_manager_config = AnalysisManagerConfig(pool_size=10)
+
+    analysis_manager = AnalysisManager(analysis_manager_config)
+
+    try:
+        analysis_manager.start()
+        analysis_manager.wait()
+    finally:
+        analysis_manager.stop()
+
+    return
 
     analyzer.perform_analysis(args, skip_handlers, filter_handlers,
                               rs_handler, actions, metadata_tool,

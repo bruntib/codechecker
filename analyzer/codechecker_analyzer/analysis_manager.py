@@ -28,6 +28,7 @@ from codechecker_common.review_status_handler import ReviewStatusHandler
 from codechecker_statistics_collector.collectors.special_return_value import \
     SpecialReturnValueCollector
 
+from .analyzer_base import AnalyzerBase
 from . import gcc_toolchain
 
 from .analyzers import analyzer_types
@@ -813,3 +814,94 @@ def start_workers(actions_map, actions, analyzer_config_map,
 
     if not os.listdir(failed_dir):
         shutil.rmtree(failed_dir)
+
+
+class AnalysisManagerConfig:
+    """
+    Configuration for the analysis manager.
+    """
+
+    def __init__(self, pool_size: int):
+        self.pool_size = pool_size
+
+
+class AnalysisManager:
+    """
+    This class manages the analysis execution. It creates the process pool and
+    starts the analysis workers. The analysis actions can be added to a queue
+    and the analysis manager will process them in parallel.
+    """
+
+    def __init__(self, config: AnalysisManagerConfig):
+        self.config = config
+        self.queue = multiprocess.JoinableQueue()
+        self.stop_event = multiprocess.Event()
+        self.workers = []
+
+    def start(self):
+        #--- Check preconditions ---#
+
+        if self.workers:
+            raise RuntimeError("AnalysisManager is already started.")
+
+        if self.config.pool_size <= 0:
+            raise ValueError("Pool size must be greater than 0.")
+
+        if self.stop_event.is_set():
+            raise RuntimeError(
+                "AnalysisManager has been stopped and cannot be restarted.")
+
+        #--- Setup signal handler for graceful shutdown ---#
+
+        def signal_handler(signum, _frame):
+            self.stop()
+            sys.exit(128 + signum)
+
+        signal.signal(signal.SIGINT, signal_handler)
+
+        #--- Start worker processes ---#
+
+        def worker(self):
+            while True:
+                task = self.queue.get()
+
+                if task is None:
+                    break
+
+                try:
+                    AnalysisManager.execute(task)
+                finally:
+                    self.queue.task_done()
+
+        for _ in range(self.config.pool_size):
+            p = multiprocess.Process(target=worker)
+            p.start()
+            self.workers.append(p)
+
+    def stop(self):
+        if self.stop_event.is_set():
+            return
+
+        self.stop_event.set()
+
+        for _ in range(self.config.pool_size):
+            self.queue.put(None)
+
+        for worker in self.workers:
+            worker.join()
+
+    def wait(self):
+        self.queue.join()
+
+    def add_task(self, task: AnalyzerBase):
+        assert task is not None, "Only stop() can add None to the queue."
+
+        if self.stop_event.is_set():
+            raise RuntimeError(
+                "Cannot add tasks to a stopped AnalysisManager.")
+
+        self.queue.put(task)
+
+    @staticmethod
+    def execute(task: AnalyzerBase):
+        LOG.debug_analyzer(shlex.join(task.analyzer_cmd))
